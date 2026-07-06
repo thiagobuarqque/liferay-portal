@@ -10,6 +10,8 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.StyleBook;
+import com.liferay.headless.admin.site.client.pagination.Page;
+import com.liferay.headless.admin.site.client.pagination.Pagination;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
@@ -36,6 +38,41 @@ import org.junit.runner.RunWith;
 @FeatureFlag("LPD-57283")
 @RunWith(Arquillian.class)
 public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
+
+	@Test
+	public void testGetDesignLibraryStyleBooksPageWhenDepotTypeIsDesignLibrary()
+		throws Exception {
+
+		Group designLibraryGroup = _addDepotGroup(
+			DepotConstants.TYPE_DESIGN_LIBRARY);
+
+		Page<StyleBook> page = styleBookResource.getDesignLibraryStyleBooksPage(
+			designLibraryGroup.getExternalReferenceCode(), null, null, null,
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+	}
+
+	@Test
+	public void testGetDesignLibraryStyleBooksPageWhenDepotTypeIsNotDesignLibrary()
+		throws Exception {
+
+		Group assetLibraryGroup = _addDepotGroup(
+			DepotConstants.TYPE_ASSET_LIBRARY);
+
+		try {
+			styleBookResource.getDesignLibraryStyleBooksPage(
+				assetLibraryGroup.getExternalReferenceCode(), null, null, null,
+				Pagination.of(1, 10), null);
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("NOT_FOUND", problem.getStatus());
+		}
+	}
 
 	@Override
 	@Test
@@ -101,11 +138,11 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 			testGroup.getExternalReferenceCode(), styleBook);
 	}
 
-	private Group _addDesignLibraryDepotGroup() throws Exception {
+	private Group _addDepotGroup(int type) throws Exception {
 		DepotEntry depotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			null, DepotConstants.TYPE_DESIGN_LIBRARY,
+			null, type,
 			new ServiceContext() {
 				{
 					setCompanyId(testCompany.getCompanyId());
@@ -114,6 +151,10 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 			});
 
 		return depotEntry.getGroup();
+	}
+
+	private Group _addDesignLibraryDepotGroup() throws Exception {
+		return _addDepotGroup(DepotConstants.TYPE_ASSET_LIBRARY);
 	}
 
 	private StyleBookEntry _addStyleBookEntry(Group group) throws Exception {

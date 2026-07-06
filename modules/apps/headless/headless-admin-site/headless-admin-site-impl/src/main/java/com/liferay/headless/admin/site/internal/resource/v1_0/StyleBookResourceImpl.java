@@ -5,6 +5,9 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0;
 
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.resource.v1_0.StyleBookResource;
@@ -264,6 +267,17 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 		Group group = _groupLocalService.getGroupByExternalReferenceCode(
 			externalReferenceCode, contextCompany.getCompanyId());
 
+		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
+			group.getGroupId());
+
+		if ((depotEntry == null) ||
+			(depotEntry.getType() != DepotConstants.TYPE_DESIGN_LIBRARY)) {
+
+			throw new NotFoundException(
+				"Unable to find design library with external reference code '" +
+					externalReferenceCode + "'");
+		}
+
 		return group.getGroupId();
 	}
 
@@ -376,6 +390,9 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 				contextUser),
 			styleBookEntry);
 	}
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
