@@ -6,14 +6,24 @@
 package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,12 +73,55 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 		_testPostSiteStyleBookWithDuplicateKey();
 	}
 
+	@Test
+	public void testStyleBookFromDesignLibraryHasDesignLibraryFields()
+		throws Exception {
+
+		Group depotGroup = _addDesignLibraryDepotGroup();
+
+		StyleBookEntry styleBookEntry = _addStyleBookEntry(depotGroup);
+
+		StyleBook styleBook = styleBookResource.getSiteStyleBook(
+			depotGroup.getExternalReferenceCode(),
+			styleBookEntry.getExternalReferenceCode());
+
+		Assert.assertEquals(
+			depotGroup.getExternalReferenceCode(),
+			styleBook.getDesignLibraryExternalReferenceCode());
+		Assert.assertEquals(
+			depotGroup.getDescriptiveName(LocaleUtil.getDefault()),
+			styleBook.getDesignLibraryName());
+	}
+
 	@Override
 	protected StyleBook testPostSiteStyleBook_addStyleBook(StyleBook styleBook)
 		throws Exception {
 
 		return styleBookResource.postSiteStyleBook(
 			testGroup.getExternalReferenceCode(), styleBook);
+	}
+
+	private Group _addDesignLibraryDepotGroup() throws Exception {
+		DepotEntry depotEntry = DepotEntryLocalServiceUtil.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, DepotConstants.TYPE_DESIGN_LIBRARY,
+			new ServiceContext() {
+				{
+					setCompanyId(testCompany.getCompanyId());
+					setUserId(TestPropsValues.getUserId());
+				}
+			});
+
+		return depotEntry.getGroup();
+	}
+
+	private StyleBookEntry _addStyleBookEntry(Group group) throws Exception {
+		return StyleBookEntryLocalServiceUtil.addStyleBookEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			group.getGroupId(), false, StringPool.BLANK,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null);
 	}
 
 	private void _testPatchSiteStyleBook() throws Exception {

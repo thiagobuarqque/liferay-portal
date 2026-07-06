@@ -8,8 +8,10 @@ package com.liferay.headless.admin.site.internal.dto.v1_0.converter;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.user.dto.v1_0.Creator;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
@@ -35,6 +37,9 @@ public class StyleBookDTOConverter
 		DTOConverterContext dtoConverterContext,
 		StyleBookEntry styleBookEntry) {
 
+		Group group = _groupLocalService.fetchGroup(
+			styleBookEntry.getGroupId());
+
 		StyleBook styleBook = new StyleBook();
 
 		styleBook.setCreator(
@@ -56,6 +61,23 @@ public class StyleBookDTOConverter
 		styleBook.setDateCreated(styleBookEntry::getCreateDate);
 		styleBook.setDateModified(styleBookEntry::getModifiedDate);
 		styleBook.setDefaultStyleBook(styleBookEntry::getDefaultStyleBookEntry);
+		styleBook.setDesignLibraryExternalReferenceCode(
+			() -> {
+				if ((group == null) || !group.isDepot()) {
+					return null;
+				}
+
+				return group.getExternalReferenceCode();
+			});
+		styleBook.setDesignLibraryName(
+			() -> {
+				if ((group == null) || !group.isDepot()) {
+					return null;
+				}
+
+				return group.getDescriptiveName(
+					dtoConverterContext.getLocale());
+			});
 		styleBook.setExternalReferenceCode(
 			styleBookEntry::getExternalReferenceCode);
 		styleBook.setFrontendTokensValues(
@@ -87,6 +109,9 @@ public class StyleBookDTOConverter
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;
