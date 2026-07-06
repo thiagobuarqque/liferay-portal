@@ -9,20 +9,34 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.resource.v1_0.StyleBookResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
+import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,12 +51,15 @@ import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.constants.StyleBookConstants;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryService;
+import com.liferay.style.book.util.StyleBookEntryProviderUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.util.comparator.StyleBookEntryCreateDateComparator;
 import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -132,6 +149,67 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 			document -> _toStyleBook(
 				_styleBookEntryService.getStyleBookEntry(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+	}
+
+	@Override
+	public Page<StyleBook> getSitePageSpecificationStyleBooksPage(
+			String siteExternalReferenceCode,
+			String pageSpecificationExternalReferenceCode, String search,
+			Pagination pagination)
+		throws Exception {
+
+		_checkFeatureFlag();
+
+		long siteGroupId = _getGroupId(siteExternalReferenceCode);
+
+		Layout layout = _resolveLayout(
+			siteGroupId, pageSpecificationExternalReferenceCode);
+
+		_checkLayoutStyleBooksPermission(layout);
+
+		long groupId = _staging.getLiveGroupId(layout.getGroupId());
+
+		String themeId = _getLayoutThemeId(layout);
+
+		List<StyleBookEntry> styleBookEntries = new ArrayList<>();
+
+		StyleBookEntry themeStyleBookEntry =
+			StyleBookUtil.getStyleFromThemeStyleBookEntry(
+				layout, contextAcceptLanguage.getPreferredLocale());
+
+		if ((themeStyleBookEntry != null) &&
+			(themeStyleBookEntry.getName() != null)) {
+
+			styleBookEntries.add(themeStyleBookEntry);
+		}
+
+		for (StyleBookEntry styleBookEntry :
+				StyleBookEntryProviderUtil.getStyleBookEntries(
+					contextCompany.getCompanyId(), groupId, themeId)) {
+
+			if (Validator.isNotNull(search)) {
+				String name = StringUtil.toLowerCase(
+					GetterUtil.getString(styleBookEntry.getName()));
+
+				if (!name.contains(StringUtil.toLowerCase(search))) {
+					continue;
+				}
+			}
+
+			styleBookEntries.add(styleBookEntry);
+		}
+
+		if (pagination == null) {
+			return Page.of(transform(styleBookEntries, this::_toStyleBook));
+		}
+
+		return Page.of(
+			transform(
+				ListUtil.subList(
+					styleBookEntries, pagination.getStartPosition(),
+					pagination.getEndPosition()),
+				this::_toStyleBook),
+			pagination, styleBookEntries.size());
 	}
 
 	@Override
@@ -261,6 +339,23 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 		}
 	}
 
+	private void _checkLayoutStyleBooksPermission(Layout layout)
+		throws Exception {
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (LayoutPermissionUtil.contains(
+				permissionChecker, layout, ActionKeys.UPDATE)) {
+
+			return;
+		}
+
+		_portletResourcePermission.check(
+			permissionChecker, layout.getGroupId(),
+			StyleBookActionKeys.MANAGE_STYLE_BOOK_ENTRIES);
+	}
+
 	private long _getDesignLibraryGroupId(String externalReferenceCode)
 		throws Exception {
 
@@ -302,6 +397,18 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 		}
 
 		return group.getGroupId();
+	}
+
+	private String _getLayoutThemeId(Layout layout) {
+		StyleBookEntry themeStyleBookEntry =
+			StyleBookUtil.getStyleFromThemeStyleBookEntry(
+				layout, contextAcceptLanguage.getPreferredLocale());
+
+		if (themeStyleBookEntry != null) {
+			return themeStyleBookEntry.getThemeId();
+		}
+
+		return layout.getThemeId();
 	}
 
 	private long _getPreviewFileEntryId(
@@ -379,6 +486,40 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 		return orderByComparator;
 	}
 
+	private Layout _resolveLayout(long groupId, String externalReferenceCode)
+		throws Exception {
+
+		Layout layout = _layoutLocalService.fetchLayoutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+
+		if (layout != null) {
+			return layout;
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (layoutPageTemplateEntry != null) {
+			return _layoutLocalService.getLayout(
+				layoutPageTemplateEntry.getPlid());
+		}
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			_layoutUtilityPageEntryService.
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (layoutUtilityPageEntry != null) {
+			return _layoutLocalService.getLayout(
+				layoutUtilityPageEntry.getPlid());
+		}
+
+		throw new NoSuchLayoutException(
+			"No layout for external reference code " + externalReferenceCode);
+	}
+
 	private StyleBook _toStyleBook(StyleBookEntry styleBookEntry)
 		throws Exception {
 
@@ -402,6 +543,23 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Reference
+	private LayoutUtilityPageEntryService _layoutUtilityPageEntryService;
+
+	@Reference(
+		target = "(resource.name=" + StyleBookConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference
+	private Staging _staging;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.StyleBookDTOConverter)"
