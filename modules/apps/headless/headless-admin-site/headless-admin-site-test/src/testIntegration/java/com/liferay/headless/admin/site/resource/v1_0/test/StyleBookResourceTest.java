@@ -16,6 +16,7 @@ import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -131,6 +132,65 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 	}
 
 	@Override
+	protected StyleBook testDeleteDesignLibraryStyleBook_addStyleBook()
+		throws Exception {
+
+		return _addDesignLibraryStyleBook(randomStyleBook());
+	}
+
+	@Override
+	protected String
+			testDeleteDesignLibraryStyleBook_getDesignLibraryExternalReferenceCode(
+				StyleBook styleBook)
+		throws Exception {
+
+		return styleBook.getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected StyleBook testGetDesignLibraryStyleBook_addStyleBook()
+		throws Exception {
+
+		return _addDesignLibraryStyleBook(randomStyleBook());
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryStyleBook_getDesignLibraryExternalReferenceCode(
+				StyleBook styleBook)
+		throws Exception {
+
+		return styleBook.getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected StyleBook testGetDesignLibraryStyleBooksPage_addStyleBook(
+			String designLibraryExternalReferenceCode, StyleBook styleBook)
+		throws Exception {
+
+		Group designLibraryGroup =
+			_groupLocalService.fetchGroupByExternalReferenceCode(
+				designLibraryExternalReferenceCode, testCompany.getCompanyId());
+
+		StyleBookEntry styleBookEntry = _addStyleBookEntry(
+			designLibraryGroup, styleBook);
+
+		return styleBookResource.getDesignLibraryStyleBook(
+			designLibraryExternalReferenceCode,
+			styleBookEntry.getExternalReferenceCode());
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryStyleBooksPage_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		Group designLibraryGroup = _addDesignLibraryDepotGroup();
+
+		return designLibraryGroup.getExternalReferenceCode();
+	}
+
+	@Override
 	protected StyleBook testPostSiteStyleBook_addStyleBook(StyleBook styleBook)
 		throws Exception {
 
@@ -154,7 +214,20 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 	}
 
 	private Group _addDesignLibraryDepotGroup() throws Exception {
-		return _addDepotGroup(DepotConstants.TYPE_ASSET_LIBRARY);
+		return _addDepotGroup(DepotConstants.TYPE_DESIGN_LIBRARY);
+	}
+
+	private StyleBook _addDesignLibraryStyleBook(StyleBook styleBook)
+		throws Exception {
+
+		Group designLibraryGroup = _addDesignLibraryDepotGroup();
+
+		StyleBookEntry styleBookEntry = _addStyleBookEntry(
+			designLibraryGroup, styleBook);
+
+		return styleBookResource.getDesignLibraryStyleBook(
+			designLibraryGroup.getExternalReferenceCode(),
+			styleBookEntry.getExternalReferenceCode());
 	}
 
 	private StyleBookEntry _addStyleBookEntry(Group group) throws Exception {
@@ -163,6 +236,24 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 			group.getGroupId(), false, StringPool.BLANK,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null);
+	}
+
+	private StyleBookEntry _addStyleBookEntry(Group group, StyleBook styleBook)
+		throws Exception {
+
+		boolean defaultStyleBook = false;
+
+		if ((styleBook.getDefaultStyleBook() != null) &&
+			styleBook.getDefaultStyleBook()) {
+
+			defaultStyleBook = true;
+		}
+
+		return StyleBookEntryLocalServiceUtil.addStyleBookEntry(
+			styleBook.getExternalReferenceCode(), TestPropsValues.getUserId(),
+			group.getGroupId(), defaultStyleBook,
+			styleBook.getFrontendTokensValues(), styleBook.getName(),
+			styleBook.getKey(), styleBook.getThemeId(), null);
 	}
 
 	private void _testPatchSiteStyleBook() throws Exception {
@@ -271,6 +362,9 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 				problemException.getMessage());
 		}
 	}
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 	@Inject
 	private Language _language;
