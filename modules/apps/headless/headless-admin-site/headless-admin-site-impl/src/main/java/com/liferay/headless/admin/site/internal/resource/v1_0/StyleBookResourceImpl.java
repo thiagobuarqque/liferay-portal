@@ -12,11 +12,13 @@ import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -27,6 +29,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.constants.StyleBookConstants;
 import com.liferay.style.book.model.StyleBookEntry;
@@ -37,6 +40,7 @@ import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -54,6 +58,21 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 
 	@Override
+	public void deleteDesignLibraryStyleBook(
+			String designLibraryExternalReferenceCode,
+			String styleBookExternalReferenceCode)
+		throws Exception {
+
+		_checkFeatureFlag();
+
+		StyleBookEntry styleBookEntry = _getDesignLibraryStyleBookEntry(
+			designLibraryExternalReferenceCode, styleBookExternalReferenceCode);
+
+		_styleBookEntryService.deleteStyleBookEntry(
+			styleBookEntry.getStyleBookEntryId());
+	}
+
+	@Override
 	public void deleteSiteStyleBook(
 			String siteExternalReferenceCode,
 			String styleBookExternalReferenceCode)
@@ -66,6 +85,50 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 
 		_styleBookEntryService.deleteStyleBookEntry(
 			styleBookEntry.getStyleBookEntryId());
+	}
+
+	@Override
+	public StyleBook getDesignLibraryStyleBook(
+			String designLibraryExternalReferenceCode,
+			String styleBookExternalReferenceCode)
+		throws Exception {
+
+		_checkFeatureFlag();
+
+		return _toStyleBook(
+			_getDesignLibraryStyleBookEntry(
+				designLibraryExternalReferenceCode,
+				styleBookExternalReferenceCode));
+	}
+
+	@Override
+	public Page<StyleBook> getDesignLibraryStyleBooksPage(
+			String designLibraryExternalReferenceCode, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		_checkFeatureFlag();
+
+		long groupId = _getDesignLibraryGroupId(
+			designLibraryExternalReferenceCode);
+
+		return SearchUtil.search(
+			Collections.emptyMap(),
+			booleanQuery -> {
+			},
+			filter, StyleBookEntry.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+				searchContext.setGroupIds(new long[] {groupId});
+			},
+			sorts,
+			document -> _toStyleBook(
+				_styleBookEntryService.getStyleBookEntry(
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	@Override
@@ -193,6 +256,25 @@ public class StyleBookResourceImpl extends BaseStyleBookResourceImpl {
 
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	private long _getDesignLibraryGroupId(String externalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
+
+		return group.getGroupId();
+	}
+
+	private StyleBookEntry _getDesignLibraryStyleBookEntry(
+			String designLibraryExternalReferenceCode,
+			String styleBookExternalReferenceCode)
+		throws Exception {
+
+		return _styleBookEntryService.getStyleBookEntryByExternalReferenceCode(
+			styleBookExternalReferenceCode,
+			_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
 	}
 
 	private long _getGroupId(String siteExternalReferenceCode) {
