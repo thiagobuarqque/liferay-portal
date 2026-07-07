@@ -229,6 +229,101 @@ public class StyleBook implements Serializable {
 	private Supplier<Boolean> _defaultStyleBookSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The external reference code of the design library this style book belongs to. Null for site-scoped style books."
+	)
+	public String getDesignLibraryExternalReferenceCode() {
+		if (_designLibraryExternalReferenceCodeSupplier != null) {
+			designLibraryExternalReferenceCode =
+				_designLibraryExternalReferenceCodeSupplier.get();
+
+			_designLibraryExternalReferenceCodeSupplier = null;
+		}
+
+		return designLibraryExternalReferenceCode;
+	}
+
+	public void setDesignLibraryExternalReferenceCode(
+		String designLibraryExternalReferenceCode) {
+
+		this.designLibraryExternalReferenceCode =
+			designLibraryExternalReferenceCode;
+
+		_designLibraryExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDesignLibraryExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			designLibraryExternalReferenceCodeUnsafeSupplier) {
+
+		_designLibraryExternalReferenceCodeSupplier = () -> {
+			try {
+				return designLibraryExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The external reference code of the design library this style book belongs to. Null for site-scoped style books."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String designLibraryExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _designLibraryExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The name of the design library this style book belongs to. Null for site-scoped style books."
+	)
+	public String getDesignLibraryName() {
+		if (_designLibraryNameSupplier != null) {
+			designLibraryName = _designLibraryNameSupplier.get();
+
+			_designLibraryNameSupplier = null;
+		}
+
+		return designLibraryName;
+	}
+
+	public void setDesignLibraryName(String designLibraryName) {
+		this.designLibraryName = designLibraryName;
+
+		_designLibraryNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDesignLibraryName(
+		UnsafeSupplier<String, Exception> designLibraryNameUnsafeSupplier) {
+
+		_designLibraryNameSupplier = () -> {
+			try {
+				return designLibraryNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The name of the design library this style book belongs to. Null for site-scoped style books."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String designLibraryName;
+
+	@JsonIgnore
+	private Supplier<String> _designLibraryNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The style book's external reference code."
 	)
 	public String getExternalReferenceCode() {
@@ -578,6 +673,39 @@ public class StyleBook implements Serializable {
 			sb.append(defaultStyleBook);
 		}
 
+		String designLibraryExternalReferenceCode =
+			getDesignLibraryExternalReferenceCode();
+
+		if (designLibraryExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"designLibraryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(designLibraryExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		String designLibraryName = getDesignLibraryName();
+
+		if (designLibraryName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"designLibraryName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(designLibraryName));
+
+			sb.append("\"");
+		}
+
 		String externalReferenceCode = getExternalReferenceCode();
 
 		if (externalReferenceCode != null) {
@@ -776,4 +904,4 @@ public class StyleBook implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1838654365
+// LIFERAY-REST-BUILDER-HASH:-657313761

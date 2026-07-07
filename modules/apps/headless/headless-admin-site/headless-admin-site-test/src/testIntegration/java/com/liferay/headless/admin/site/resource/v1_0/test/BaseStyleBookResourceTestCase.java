@@ -186,6 +186,8 @@ public abstract class BaseStyleBookResourceTestCase {
 
 		StyleBook styleBook = randomStyleBook();
 
+		styleBook.setDesignLibraryExternalReferenceCode(regex);
+		styleBook.setDesignLibraryName(regex);
 		styleBook.setExternalReferenceCode(regex);
 		styleBook.setFrontendTokensValues(regex);
 		styleBook.setKey(regex);
@@ -199,6 +201,9 @@ public abstract class BaseStyleBookResourceTestCase {
 
 		styleBook = StyleBookSerDes.toDTO(json);
 
+		Assert.assertEquals(
+			regex, styleBook.getDesignLibraryExternalReferenceCode());
+		Assert.assertEquals(regex, styleBook.getDesignLibraryName());
 		Assert.assertEquals(regex, styleBook.getExternalReferenceCode());
 		Assert.assertEquals(regex, styleBook.getFrontendTokensValues());
 		Assert.assertEquals(regex, styleBook.getKey());
@@ -912,6 +917,27 @@ public abstract class BaseStyleBookResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"designLibraryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (styleBook.getDesignLibraryExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"designLibraryName", additionalAssertFieldName)) {
+
+				if (styleBook.getDesignLibraryName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"externalReferenceCode", additionalAssertFieldName)) {
 
 				if (styleBook.getExternalReferenceCode() == null) {
@@ -1122,6 +1148,33 @@ public abstract class BaseStyleBookResourceTestCase {
 				if (!Objects.deepEquals(
 						styleBook1.getDefaultStyleBook(),
 						styleBook2.getDefaultStyleBook())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"designLibraryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						styleBook1.getDesignLibraryExternalReferenceCode(),
+						styleBook2.getDesignLibraryExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"designLibraryName", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						styleBook1.getDesignLibraryName(),
+						styleBook2.getDesignLibraryName())) {
 
 					return false;
 				}
@@ -1373,6 +1426,98 @@ public abstract class BaseStyleBookResourceTestCase {
 		if (entityFieldName.equals("defaultStyleBook")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("designLibraryExternalReferenceCode")) {
+			Object object = styleBook.getDesignLibraryExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("designLibraryName")) {
+			Object object = styleBook.getDesignLibraryName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
@@ -1702,6 +1847,10 @@ public abstract class BaseStyleBookResourceTestCase {
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				defaultStyleBook = RandomTestUtil.randomBoolean();
+				designLibraryExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				designLibraryName = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				frontendTokensValues = StringUtil.toLowerCase(
@@ -1958,4 +2107,4 @@ public abstract class BaseStyleBookResourceTestCase {
 		_styleBookResource;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-625264837
+// LIFERAY-REST-BUILDER-HASH:-823127913

@@ -110,6 +110,53 @@ public class StyleBook implements Cloneable, Serializable {
 
 	protected Boolean defaultStyleBook;
 
+	public String getDesignLibraryExternalReferenceCode() {
+		return designLibraryExternalReferenceCode;
+	}
+
+	public void setDesignLibraryExternalReferenceCode(
+		String designLibraryExternalReferenceCode) {
+
+		this.designLibraryExternalReferenceCode =
+			designLibraryExternalReferenceCode;
+	}
+
+	public void setDesignLibraryExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			designLibraryExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			designLibraryExternalReferenceCode =
+				designLibraryExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String designLibraryExternalReferenceCode;
+
+	public String getDesignLibraryName() {
+		return designLibraryName;
+	}
+
+	public void setDesignLibraryName(String designLibraryName) {
+		this.designLibraryName = designLibraryName;
+	}
+
+	public void setDesignLibraryName(
+		UnsafeSupplier<String, Exception> designLibraryNameUnsafeSupplier) {
+
+		try {
+			designLibraryName = designLibraryNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String designLibraryName;
+
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -269,4 +316,4 @@ public class StyleBook implements Cloneable, Serializable {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-683943060
+// LIFERAY-REST-BUILDER-HASH:1390807528

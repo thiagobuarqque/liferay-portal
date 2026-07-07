@@ -100,6 +100,35 @@ public class StyleBookSerDes {
 			sb.append(styleBook.getDefaultStyleBook());
 		}
 
+		if (styleBook.getDesignLibraryExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"designLibraryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(styleBook.getDesignLibraryExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (styleBook.getDesignLibraryName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"designLibraryName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(styleBook.getDesignLibraryName()));
+
+			sb.append("\"");
+		}
+
 		if (styleBook.getExternalReferenceCode() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -240,6 +269,25 @@ public class StyleBookSerDes {
 				String.valueOf(styleBook.getDefaultStyleBook()));
 		}
 
+		if (styleBook.getDesignLibraryExternalReferenceCode() == null) {
+			map.put("designLibraryExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"designLibraryExternalReferenceCode",
+				String.valueOf(
+					styleBook.getDesignLibraryExternalReferenceCode()));
+		}
+
+		if (styleBook.getDesignLibraryName() == null) {
+			map.put("designLibraryName", null);
+		}
+		else {
+			map.put(
+				"designLibraryName",
+				String.valueOf(styleBook.getDesignLibraryName()));
+		}
+
 		if (styleBook.getExternalReferenceCode() == null) {
 			map.put("externalReferenceCode", null);
 		}
@@ -319,6 +367,15 @@ public class StyleBookSerDes {
 				return false;
 			}
 			else if (Objects.equals(
+						jsonParserFieldName,
+						"designLibraryExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "designLibraryName")) {
+				return false;
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "externalReferenceCode")) {
 
 				return false;
@@ -374,6 +431,21 @@ public class StyleBookSerDes {
 				if (jsonParserFieldValue != null) {
 					styleBook.setDefaultStyleBook(
 						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"designLibraryExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					styleBook.setDesignLibraryExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "designLibraryName")) {
+				if (jsonParserFieldValue != null) {
+					styleBook.setDesignLibraryName(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -497,4 +569,4 @@ public class StyleBookSerDes {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:57398793
+// LIFERAY-REST-BUILDER-HASH:1973635963
