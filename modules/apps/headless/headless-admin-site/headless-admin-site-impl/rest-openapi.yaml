@@ -3816,6 +3816,16 @@ components:
                     description:
                         A flag to indicate whether this is the default style book for the specified theme.
                     type: boolean
+                designLibraryExternalReferenceCode:
+                    description:
+                        The external reference code of the design library this style book belongs to. Null for site-scoped style books.
+                    readOnly: true
+                    type: string
+                designLibraryName:
+                    description:
+                        The name of the design library this style book belongs to. Null for site-scoped style books.
+                    readOnly: true
+                    type: string
                 externalReferenceCode:
                     description:
                         The style book's external reference code.
