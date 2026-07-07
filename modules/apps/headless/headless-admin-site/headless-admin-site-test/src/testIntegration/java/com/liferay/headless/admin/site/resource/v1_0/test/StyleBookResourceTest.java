@@ -8,25 +8,40 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.pagination.Pagination;
 import com.liferay.headless.admin.site.client.problem.Problem;
+import com.liferay.headless.admin.site.client.resource.v1_0.StyleBookResource;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -70,6 +85,228 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 		}
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("NOT_FOUND", problem.getStatus());
+		}
+	}
+
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageForContentPage()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		layout = _layoutLocalService.updateLookAndFeel(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			_THEME_ID_CLASSIC, "01", StringPool.BLANK);
+
+		StyleBookEntry matchingStyleBookEntry = _addStyleBookEntry(
+			testGroup, _THEME_ID_CLASSIC);
+		StyleBookEntry otherThemeStyleBookEntry = _addStyleBookEntry(
+			testGroup, _THEME_ID_DIALECT);
+
+		Page<StyleBook> page =
+			styleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(), null, Pagination.of(1, 10));
+
+		Set<String> externalReferenceCodes = _getExternalReferenceCodes(page);
+
+		Assert.assertTrue(
+			externalReferenceCodes.toString(),
+			externalReferenceCodes.contains(
+				matchingStyleBookEntry.getExternalReferenceCode()));
+		Assert.assertFalse(
+			externalReferenceCodes.toString(),
+			externalReferenceCodes.contains(
+				otherThemeStyleBookEntry.getExternalReferenceCode()));
+	}
+
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageForDraftAndPublishedLayouts()
+		throws Exception {
+
+		Layout publishedLayout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout = publishedLayout.fetchDraftLayout();
+
+		publishedLayout = _layoutLocalService.updateLookAndFeel(
+			publishedLayout.getGroupId(), publishedLayout.isPrivateLayout(),
+			publishedLayout.getLayoutId(), _THEME_ID_CLASSIC, "01",
+			StringPool.BLANK);
+
+		draftLayout = _layoutLocalService.updateLookAndFeel(
+			draftLayout.getGroupId(), draftLayout.isPrivateLayout(),
+			draftLayout.getLayoutId(), _THEME_ID_DIALECT, "01",
+			StringPool.BLANK);
+
+		StyleBookEntry classicStyleBookEntry = _addStyleBookEntry(
+			testGroup, _THEME_ID_CLASSIC);
+		StyleBookEntry dialectStyleBookEntry = _addStyleBookEntry(
+			testGroup, _THEME_ID_DIALECT);
+
+		Set<String> publishedExternalReferenceCodes =
+			_getExternalReferenceCodes(
+				styleBookResource.getSitePageSpecificationStyleBooksPage(
+					testGroup.getExternalReferenceCode(),
+					publishedLayout.getExternalReferenceCode(), null,
+					Pagination.of(1, 10)));
+		Set<String> draftExternalReferenceCodes = _getExternalReferenceCodes(
+			styleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				draftLayout.getExternalReferenceCode(), null,
+				Pagination.of(1, 10)));
+
+		Assert.assertTrue(
+			publishedExternalReferenceCodes.toString(),
+			publishedExternalReferenceCodes.contains(
+				classicStyleBookEntry.getExternalReferenceCode()));
+		Assert.assertFalse(
+			publishedExternalReferenceCodes.toString(),
+			publishedExternalReferenceCodes.contains(
+				dialectStyleBookEntry.getExternalReferenceCode()));
+
+		Assert.assertTrue(
+			draftExternalReferenceCodes.toString(),
+			draftExternalReferenceCodes.contains(
+				dialectStyleBookEntry.getExternalReferenceCode()));
+		Assert.assertFalse(
+			draftExternalReferenceCodes.toString(),
+			draftExternalReferenceCodes.contains(
+				classicStyleBookEntry.getExternalReferenceCode()));
+
+		Assert.assertNotEquals(
+			publishedExternalReferenceCodes, draftExternalReferenceCodes);
+	}
+
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageForMasterPage()
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryTestUtil.getMasterLayoutPageTemplateEntry(
+				ServiceContextTestUtil.getServiceContext(
+					testGroup, TestPropsValues.getUserId()),
+				WorkflowConstants.STATUS_APPROVED);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		_layoutLocalService.updateLookAndFeel(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			_THEME_ID_CLASSIC, "01", StringPool.BLANK);
+
+		StyleBookEntry styleBookEntry = _addStyleBookEntry(
+			testGroup, _THEME_ID_CLASSIC);
+
+		Page<StyleBook> page =
+			styleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				layoutPageTemplateEntry.getExternalReferenceCode(), null,
+				Pagination.of(1, 10));
+
+		Set<String> externalReferenceCodes = _getExternalReferenceCodes(page);
+
+		Assert.assertTrue(
+			externalReferenceCodes.toString(),
+			externalReferenceCodes.contains(
+				styleBookEntry.getExternalReferenceCode()));
+	}
+
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageIncludesConnectedDesignLibraryStyleBooks()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		layout = _layoutLocalService.updateLookAndFeel(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			_THEME_ID_CLASSIC, "01", StringPool.BLANK);
+
+		Group connectedDepotGroup = _addDesignLibraryDepotGroup();
+
+		_connectDepotGroup(connectedDepotGroup, testGroup);
+
+		StyleBookEntry connectedStyleBookEntry = _addStyleBookEntry(
+			connectedDepotGroup, _THEME_ID_CLASSIC);
+
+		Group unconnectedDepotGroup = _addDesignLibraryDepotGroup();
+
+		StyleBookEntry unconnectedStyleBookEntry = _addStyleBookEntry(
+			unconnectedDepotGroup, _THEME_ID_CLASSIC);
+
+		Page<StyleBook> page =
+			styleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(), null, Pagination.of(1, 10));
+
+		Set<String> externalReferenceCodes = _getExternalReferenceCodes(page);
+
+		Assert.assertTrue(
+			externalReferenceCodes.toString(),
+			externalReferenceCodes.contains(
+				connectedStyleBookEntry.getExternalReferenceCode()));
+		Assert.assertFalse(
+			externalReferenceCodes.toString(),
+			externalReferenceCodes.contains(
+				unconnectedStyleBookEntry.getExternalReferenceCode()));
+	}
+
+	@FeatureFlag(enable = false, value = "LPD-57283")
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageWhenFeatureFlagDisabled()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		try {
+			styleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(), null, Pagination.of(1, 10));
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
+		}
+	}
+
+	@Test
+	public void testGetSitePageSpecificationStyleBooksPageWithoutPermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		User user = UserTestUtil.addUser(false);
+
+		user = _userLocalService.updatePassword(
+			user.getUserId(), "test", "test", false, true);
+
+		StyleBookResource restrictedStyleBookResource =
+			StyleBookResource.builder(
+			).authentication(
+				user.getEmailAddress(), "test"
+			).endpoint(
+				testCompany.getVirtualHostname(),
+				PortalUtil.getPortalServerPort(false), "http"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		try {
+			restrictedStyleBookResource.getSitePageSpecificationStyleBooksPage(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(), null, Pagination.of(1, 10));
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			// GET requests mask PrincipalException as NOT_FOUND instead of
+			// FORBIDDEN
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
 		}
@@ -191,6 +428,32 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 	}
 
 	@Override
+	protected StyleBook testGetSitePageSpecificationStyleBooksPage_addStyleBook(
+			String siteExternalReferenceCode,
+			String pageSpecificationExternalReferenceCode, StyleBook styleBook)
+		throws Exception {
+
+		styleBook.setThemeId(_THEME_ID_CLASSIC);
+
+		return styleBookResource.postSiteStyleBook(
+			siteExternalReferenceCode, styleBook);
+	}
+
+	@Override
+	protected String
+			testGetSitePageSpecificationStyleBooksPage_getPageSpecificationExternalReferenceCode()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		layout = _layoutLocalService.updateLookAndFeel(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			_THEME_ID_CLASSIC, "01", StringPool.BLANK);
+
+		return layout.getExternalReferenceCode();
+	}
+
+	@Override
 	protected StyleBook testPostSiteStyleBook_addStyleBook(StyleBook styleBook)
 		throws Exception {
 
@@ -238,6 +501,16 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 			RandomTestUtil.randomString(), null);
 	}
 
+	private StyleBookEntry _addStyleBookEntry(Group group, String themeId)
+		throws Exception {
+
+		return StyleBookEntryLocalServiceUtil.addStyleBookEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			group.getGroupId(), false, StringPool.BLANK,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			themeId, null);
+	}
+
 	private StyleBookEntry _addStyleBookEntry(Group group, StyleBook styleBook)
 		throws Exception {
 
@@ -254,6 +527,26 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 			group.getGroupId(), defaultStyleBook,
 			styleBook.getFrontendTokensValues(), styleBook.getName(),
 			styleBook.getKey(), styleBook.getThemeId(), null);
+	}
+
+	private void _connectDepotGroup(Group depotGroup, Group group)
+		throws Exception {
+
+		DepotEntry depotEntry = DepotEntryLocalServiceUtil.fetchGroupDepotEntry(
+			depotGroup.getGroupId());
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), group.getGroupId());
+	}
+
+	private Set<String> _getExternalReferenceCodes(Page<StyleBook> page) {
+		Set<String> externalReferenceCodes = new HashSet<>();
+
+		for (StyleBook styleBook : page.getItems()) {
+			externalReferenceCodes.add(styleBook.getExternalReferenceCode());
+		}
+
+		return externalReferenceCodes;
 	}
 
 	private void _testPatchSiteStyleBook() throws Exception {
@@ -363,10 +656,23 @@ public class StyleBookResourceTest extends BaseStyleBookResourceTestCase {
 		}
 	}
 
+	private static final String _THEME_ID_CLASSIC = "classic_WAR_classictheme";
+
+	private static final String _THEME_ID_DIALECT = "dialect_WAR_dialecttheme";
+
+	@Inject
+	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
+
 	@Inject
 	private GroupLocalService _groupLocalService;
 
 	@Inject
 	private Language _language;
+
+	@Inject
+	private LayoutLocalService _layoutLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }
