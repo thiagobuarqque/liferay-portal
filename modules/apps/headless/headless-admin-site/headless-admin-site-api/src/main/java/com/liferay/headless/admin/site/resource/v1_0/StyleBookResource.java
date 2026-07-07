@@ -46,9 +46,27 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface StyleBookResource {
 
+	public void deleteDesignLibraryStyleBook(
+			String designLibraryExternalReferenceCode,
+			String styleBookExternalReferenceCode)
+		throws Exception;
+
 	public void deleteSiteStyleBook(
 			String siteExternalReferenceCode,
 			String styleBookExternalReferenceCode)
+		throws Exception;
+
+	public StyleBook getDesignLibraryStyleBook(
+			String designLibraryExternalReferenceCode,
+			String styleBookExternalReferenceCode)
+		throws Exception;
+
+	public Page<StyleBook> getDesignLibraryStyleBooksPage(
+			String designLibraryExternalReferenceCode, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public StyleBook getSiteStyleBook(
@@ -185,4 +203,4 @@ public interface StyleBookResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:547836133
+// LIFERAY-REST-BUILDER-HASH:1831084150
