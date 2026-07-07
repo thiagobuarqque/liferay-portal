@@ -7322,6 +7322,48 @@ paths:
                                 $ref: "#/components/schemas/PageSpecification"
             # @review
             tags: ["PageSpecification"]
+    "/sites/{siteExternalReferenceCode}/page-specifications/{pageSpecificationExternalReferenceCode}/style-books":
+        get:
+            description:
+                Retrieves the style books assignable to a page.
+            operationId: getSitePageSpecificationStyleBooksPage
+            parameters:
+                -   in: path
+                    name: siteExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: pageSpecificationExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/StyleBook"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/StyleBook"
+                                type: array
+            tags: ["StyleBook"]
     "/sites/{siteExternalReferenceCode}/page-template-sets":
         get:
             # @review
