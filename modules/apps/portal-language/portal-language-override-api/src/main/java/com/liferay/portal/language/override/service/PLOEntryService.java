@@ -13,10 +13,12 @@ import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.language.override.model.PLOEntry;
 
 import java.io.IOException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,6 +53,11 @@ public interface PLOEntryService extends BaseService {
 			String key, String languageId, String value)
 		throws PortalException;
 
+	public PLOEntry addOrUpdatePLOEntry(
+			String key, String languageId, String value, Date createDate,
+			Date modifiedDate)
+		throws PortalException;
+
 	public void deletePLOEntries(String key) throws PortalException;
 
 	public PLOEntry deletePLOEntry(String key, String languageId)
@@ -67,7 +74,17 @@ public interface PLOEntryService extends BaseService {
 	public List<PLOEntry> getPLOEntries(long companyId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<PLOEntry> getPLOEntries(
+			long companyId, String keywords, int start, int end,
+			OrderByComparator<PLOEntry> orderByComparator)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getPLOEntriesCount(long companyId) throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getPLOEntriesCount(long companyId, String keywords)
+		throws PortalException;
 
 	public void importPLOEntries(String languageId, Properties properties)
 		throws IOException, PortalException;
@@ -76,4 +93,4 @@ public interface PLOEntryService extends BaseService {
 		throws PortalException;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:598504023
+// LIFERAY-SERVICE-BUILDER-HASH:-156714752

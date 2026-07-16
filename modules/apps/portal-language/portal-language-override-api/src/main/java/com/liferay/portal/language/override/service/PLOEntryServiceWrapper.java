@@ -34,6 +34,17 @@ public class PLOEntryServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.language.override.model.PLOEntry
+			addOrUpdatePLOEntry(
+				String key, String languageId, String value,
+				java.util.Date createDate, java.util.Date modifiedDate)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ploEntryService.addOrUpdatePLOEntry(
+			key, languageId, value, createDate, modifiedDate);
+	}
+
+	@Override
 	public void deletePLOEntries(String key)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -67,10 +78,30 @@ public class PLOEntryServiceWrapper
 	}
 
 	@Override
+	public java.util.List<com.liferay.portal.language.override.model.PLOEntry>
+			getPLOEntries(
+				long companyId, String keywords, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.language.override.model.PLOEntry>
+						orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ploEntryService.getPLOEntries(
+			companyId, keywords, start, end, orderByComparator);
+	}
+
+	@Override
 	public int getPLOEntriesCount(long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ploEntryService.getPLOEntriesCount(companyId);
+	}
+
+	@Override
+	public int getPLOEntriesCount(long companyId, String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ploEntryService.getPLOEntriesCount(companyId, keywords);
 	}
 
 	@Override
@@ -103,4 +134,4 @@ public class PLOEntryServiceWrapper
 	private PLOEntryService _ploEntryService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1663411981
+// LIFERAY-SERVICE-BUILDER-HASH:-1606469783

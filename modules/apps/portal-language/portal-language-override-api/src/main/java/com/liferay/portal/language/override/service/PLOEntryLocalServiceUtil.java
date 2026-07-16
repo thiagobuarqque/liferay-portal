@@ -46,6 +46,17 @@ public class PLOEntryLocalServiceUtil {
 			companyId, userId, key, languageId, value);
 	}
 
+	public static PLOEntry addOrUpdatePLOEntry(
+			long companyId, long userId, String key, String languageId,
+			String value, java.util.Date createDate,
+			java.util.Date modifiedDate)
+		throws PortalException {
+
+		return getService().addOrUpdatePLOEntry(
+			companyId, userId, key, languageId, value, createDate,
+			modifiedDate);
+	}
+
 	/**
 	 * Adds the plo entry to the database. Also notifies the appropriate model listeners.
 	 *
@@ -282,6 +293,14 @@ public class PLOEntryLocalServiceUtil {
 		return getService().getPLOEntries(companyId, languageId);
 	}
 
+	public static List<PLOEntry> getPLOEntries(
+		long companyId, String keywords, int start, int end,
+		OrderByComparator<PLOEntry> orderByComparator) {
+
+		return getService().getPLOEntries(
+			companyId, keywords, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of plo entries.
 	 *
@@ -293,6 +312,10 @@ public class PLOEntryLocalServiceUtil {
 
 	public static int getPLOEntriesCount(long companyId) {
 		return getService().getPLOEntriesCount(companyId);
+	}
+
+	public static int getPLOEntriesCount(long companyId, String keywords) {
+		return getService().getPLOEntriesCount(companyId, keywords);
 	}
 
 	/**
@@ -346,4 +369,4 @@ public class PLOEntryLocalServiceUtil {
 			PLOEntryLocalServiceUtil.class, PLOEntryLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1576929088
+// LIFERAY-SERVICE-BUILDER-HASH:-1708082786

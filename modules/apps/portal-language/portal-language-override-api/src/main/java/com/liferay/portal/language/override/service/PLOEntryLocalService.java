@@ -25,6 +25,7 @@ import com.liferay.portal.language.override.model.PLOEntry;
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -58,6 +59,11 @@ public interface PLOEntryLocalService
 	public PLOEntry addOrUpdatePLOEntry(
 			long companyId, long userId, String key, String languageId,
 			String value)
+		throws PortalException;
+
+	public PLOEntry addOrUpdatePLOEntry(
+			long companyId, long userId, String key, String languageId,
+			String value, Date createDate, Date modifiedDate)
 		throws PortalException;
 
 	/**
@@ -247,6 +253,11 @@ public interface PLOEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<PLOEntry> getPLOEntries(long companyId, String languageId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<PLOEntry> getPLOEntries(
+		long companyId, String keywords, int start, int end,
+		OrderByComparator<PLOEntry> orderByComparator);
+
 	/**
 	 * Returns the number of plo entries.
 	 *
@@ -257,6 +268,9 @@ public interface PLOEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getPLOEntriesCount(long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getPLOEntriesCount(long companyId, String keywords);
 
 	/**
 	 * Returns the plo entry with the primary key.
@@ -292,4 +306,4 @@ public interface PLOEntryLocalService
 	public PLOEntry updatePLOEntry(PLOEntry ploEntry);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1691152071
+// LIFERAY-SERVICE-BUILDER-HASH:-85259377
