@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.language.override.exception.PLOEntryImportException;
@@ -188,6 +189,67 @@ public class PLOEntryLocalServiceTest {
 
 			Assert.assertEquals(value, _language.get(locale, key));
 		}
+	}
+
+	@Test
+	public void testGetPLOEntriesPaginatedSearchableSortable()
+		throws Exception {
+
+		long companyId = TestPropsValues.getCompanyId();
+		String languageId = LanguageUtil.getLanguageId(LocaleUtil.US);
+
+		int initialCount = _ploEntryLocalService.getPLOEntriesCount(
+			companyId, null);
+
+		String prefix = "plo" + RandomTestUtil.randomString();
+
+		_ploEntryLocalService.addOrUpdatePLOEntry(
+			companyId, TestPropsValues.getUserId(), prefix + "-a", languageId,
+			"alpha");
+		_ploEntryLocalService.addOrUpdatePLOEntry(
+			companyId, TestPropsValues.getUserId(), prefix + "-b", languageId,
+			"bravo-" + prefix);
+		_ploEntryLocalService.addOrUpdatePLOEntry(
+			companyId, TestPropsValues.getUserId(), prefix + "-c", languageId,
+			"charlie");
+
+		Assert.assertEquals(
+			initialCount + 3,
+			_ploEntryLocalService.getPLOEntriesCount(companyId, null));
+
+		Assert.assertEquals(
+			3, _ploEntryLocalService.getPLOEntriesCount(companyId, prefix));
+
+		Assert.assertEquals(
+			1,
+			_ploEntryLocalService.getPLOEntriesCount(
+				companyId, "bravo-" + prefix));
+
+		List<PLOEntry> page = _ploEntryLocalService.getPLOEntries(
+			companyId, prefix, 0, 2,
+			OrderByComparatorFactoryUtil.create("PLOEntry", "key", true));
+
+		Assert.assertEquals(page.toString(), 2, page.size());
+		Assert.assertEquals(
+			prefix + "-a",
+			page.get(
+				0
+			).getKey());
+		Assert.assertEquals(
+			prefix + "-b",
+			page.get(
+				1
+			).getKey());
+
+		List<PLOEntry> descending = _ploEntryLocalService.getPLOEntries(
+			companyId, prefix, 0, 1,
+			OrderByComparatorFactoryUtil.create("PLOEntry", "key", false));
+
+		Assert.assertEquals(
+			prefix + "-c",
+			descending.get(
+				0
+			).getKey());
 	}
 
 	@Test

@@ -9,12 +9,14 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.language.override.constants.PLOActionKeys;
 import com.liferay.portal.language.override.model.PLOEntry;
 import com.liferay.portal.language.override.service.base.PLOEntryServiceBaseImpl;
 
 import java.io.IOException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +41,15 @@ public class PLOEntryServiceImpl extends PLOEntryServiceBaseImpl {
 			String key, String languageId, String value)
 		throws PortalException {
 
+		return addOrUpdatePLOEntry(key, languageId, value, null, null);
+	}
+
+	@Override
+	public PLOEntry addOrUpdatePLOEntry(
+			String key, String languageId, String value, Date createDate,
+			Date modifiedDate)
+		throws PortalException {
+
 		PermissionChecker permissionChecker = getPermissionChecker();
 
 		PortalPermissionUtil.check(
@@ -46,7 +57,7 @@ public class PLOEntryServiceImpl extends PLOEntryServiceBaseImpl {
 
 		return ploEntryLocalService.addOrUpdatePLOEntry(
 			permissionChecker.getCompanyId(), permissionChecker.getUserId(),
-			key, languageId, value);
+			key, languageId, value, createDate, modifiedDate);
 	}
 
 	@Override
@@ -82,11 +93,34 @@ public class PLOEntryServiceImpl extends PLOEntryServiceBaseImpl {
 	}
 
 	@Override
+	public List<PLOEntry> getPLOEntries(
+			long companyId, String keywords, int start, int end,
+			OrderByComparator<PLOEntry> orderByComparator)
+		throws PortalException {
+
+		PortalPermissionUtil.check(
+			getPermissionChecker(), PLOActionKeys.MANAGE_LANGUAGE_OVERRIDES);
+
+		return ploEntryLocalService.getPLOEntries(
+			companyId, keywords, start, end, orderByComparator);
+	}
+
+	@Override
 	public int getPLOEntriesCount(long companyId) throws PortalException {
 		PortalPermissionUtil.check(
 			getPermissionChecker(), PLOActionKeys.MANAGE_LANGUAGE_OVERRIDES);
 
 		return ploEntryLocalService.getPLOEntriesCount(companyId);
+	}
+
+	@Override
+	public int getPLOEntriesCount(long companyId, String keywords)
+		throws PortalException {
+
+		PortalPermissionUtil.check(
+			getPermissionChecker(), PLOActionKeys.MANAGE_LANGUAGE_OVERRIDES);
+
+		return ploEntryLocalService.getPLOEntriesCount(companyId, keywords);
 	}
 
 	@Override

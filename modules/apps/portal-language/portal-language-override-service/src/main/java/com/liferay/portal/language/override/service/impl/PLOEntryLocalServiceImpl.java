@@ -11,10 +11,14 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -26,6 +30,7 @@ import com.liferay.portal.language.override.internal.PLOEntryModelListener;
 import com.liferay.portal.language.override.model.PLOEntry;
 import com.liferay.portal.language.override.service.base.PLOEntryLocalServiceBaseImpl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,11 +56,23 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 			String value)
 		throws PortalException {
 
+		return addOrUpdatePLOEntry(
+			companyId, userId, key, languageId, value, null, null);
+	}
+
+	@Override
+	public PLOEntry addOrUpdatePLOEntry(
+			long companyId, long userId, String key, String languageId,
+			String value, Date createDate, Date modifiedDate)
+		throws PortalException {
+
 		languageId = _normalizeLanguageId(languageId);
 
 		_validate(key, languageId, value);
 
-		return _addOrUpdatePLOEntry(companyId, userId, key, languageId, value);
+		return _addOrUpdatePLOEntry(
+			companyId, userId, key, languageId, value, createDate,
+			modifiedDate);
 	}
 
 	@Override
@@ -94,8 +111,23 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 	}
 
 	@Override
+	public List<PLOEntry> getPLOEntries(
+		long companyId, String keywords, int start, int end,
+		OrderByComparator<PLOEntry> orderByComparator) {
+
+		return dynamicQuery(
+			_buildDynamicQuery(companyId, keywords), start, end,
+			orderByComparator);
+	}
+
+	@Override
 	public int getPLOEntriesCount(long companyId) {
 		return ploEntryPersistence.countByCompanyId(companyId);
+	}
+
+	@Override
+	public int getPLOEntriesCount(long companyId, String keywords) {
+		return (int)dynamicQueryCount(_buildDynamicQuery(companyId, keywords));
 	}
 
 	@Override
@@ -134,7 +166,7 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 				_addOrUpdatePLOEntry(
 					companyId, userId, (String)entry.getKey(), languageId,
-					(String)entry.getValue());
+					(String)entry.getValue(), null, null);
 			}
 		}
 
@@ -162,15 +194,20 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 
 	private PLOEntry _addOrUpdatePLOEntry(
 		long companyId, long userId, String key, String languageId,
-		String value) {
+		String value, Date createDate, Date modifiedDate) {
 
 		PLOEntry ploEntry = fetchPLOEntry(companyId, key, languageId);
+
+		Date date = new Date();
 
 		if (ploEntry == null) {
 			ploEntry = createPLOEntry(counterLocalService.increment());
 
 			ploEntry.setCompanyId(companyId);
 			ploEntry.setUserId(userId);
+			ploEntry.setCreateDate((createDate == null) ? date : createDate);
+			ploEntry.setModifiedDate(
+				(modifiedDate == null) ? date : modifiedDate);
 			ploEntry.setKey(key);
 			ploEntry.setLanguageId(languageId);
 			ploEntry.setValue(value);
@@ -178,13 +215,35 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 			return addPLOEntry(ploEntry);
 		}
 
-		if (Objects.equals(ploEntry.getValue(), value)) {
+		if (Objects.equals(ploEntry.getValue(), value) &&
+			(modifiedDate == null)) {
+
 			return ploEntry;
 		}
 
+		ploEntry.setModifiedDate((modifiedDate == null) ? date : modifiedDate);
 		ploEntry.setValue(value);
 
 		return updatePLOEntry(ploEntry);
+	}
+
+	private DynamicQuery _buildDynamicQuery(long companyId, String keywords) {
+		DynamicQuery dynamicQuery = dynamicQuery();
+
+		dynamicQuery.add(RestrictionsFactoryUtil.eq("companyId", companyId));
+
+		if (!Validator.isBlank(keywords)) {
+			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+			disjunction.add(
+				RestrictionsFactoryUtil.like("key", "%" + keywords + "%"));
+			disjunction.add(
+				RestrictionsFactoryUtil.like("value", "%" + keywords + "%"));
+
+			dynamicQuery.add(disjunction);
+		}
+
+		return dynamicQuery;
 	}
 
 	private String _normalizeLanguageId(String languageId) {
