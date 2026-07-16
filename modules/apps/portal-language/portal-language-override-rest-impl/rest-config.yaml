@@ -1,0 +1,13 @@
+apiDir: ../portal-language-override-rest-api/src/main/java
+apiPackagePath: com.liferay.portal.language.override.rest
+application:
+    baseURI: /language-override
+    className: PortalLanguageOverrideRESTApplication
+    name: Liferay.Portal.Language.Override.REST
+author: Thiago Buarque
+clientDir: ../portal-language-override-rest-client/src/main/java
+compatibilityVersion: 15
+forcePredictableOperationId: true
+generateGraphQL: false
+javaEEPackage: jakarta
+testDir: ../portal-language-override-rest-test/src/testIntegration/java

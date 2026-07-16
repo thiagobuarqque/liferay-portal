@@ -1,0 +1,6 @@
+Bundle-Name: Liferay Portal Language Override REST Client
+Bundle-SymbolicName: com.liferay.portal.language.override.rest.client
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.portal.language.override.rest.client.dto.v1_0,\
+	com.liferay.portal.language.override.rest.client.function
