@@ -9,7 +9,7 @@ import React from 'react';
 import AddMembersInput from '../components/members/AddMembersInput';
 
 const CONFIG: MembersConfig = {
-	defaultRoleExternalReferenceCode: 'L_DESIGN_LIBRARY_MEMBER',
+	defaultRoleExternalReferenceCode: 'L_DESIGN_LIBRARY_CONTENT_REVIEWER',
 	excludedRoleExternalReferenceCodes: ['L_DESIGN_LIBRARY_OWNER'],
 	messages: {
 		addGroupError: Liferay.Language.get(
@@ -51,7 +51,6 @@ const CONFIG: MembersConfig = {
 		L_DESIGN_LIBRARY_CONTENT_REVIEWER: Liferay.Language.get(
 			'design-library-content-reviewer'
 		),
-		L_DESIGN_LIBRARY_MEMBER: Liferay.Language.get('design-library-member'),
 	},
 };
 
