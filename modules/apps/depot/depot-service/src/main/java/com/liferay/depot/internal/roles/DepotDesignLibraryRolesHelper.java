@@ -7,6 +7,8 @@ package com.liferay.depot.internal.roles;
 
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.role.contributor.DesignLibraryRolePermission;
+import com.liferay.depot.role.contributor.DesignLibraryRolePermissionsContributor;
 import com.liferay.depot.util.DepotRoleUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -39,6 +41,40 @@ public class DepotDesignLibraryRolesHelper {
 		_resourcePermissionLocalService = resourcePermissionLocalService;
 		_roleLocalService = roleLocalService;
 		_userLocalService = userLocalService;
+	}
+
+	public void grantContributedPermissions(
+			long companyId,
+			List<DesignLibraryRolePermissionsContributor>
+				designLibraryRolePermissionsContributors)
+		throws PortalException {
+
+		for (DesignLibraryRolePermissionsContributor
+				designLibraryRolePermissionsContributor :
+					designLibraryRolePermissionsContributors) {
+
+			for (DesignLibraryRolePermission designLibraryRolePermission :
+					designLibraryRolePermissionsContributor.
+						getDesignLibraryRolePermissions()) {
+
+				Role role = _roleLocalService.fetchRole(
+					companyId, designLibraryRolePermission.getRoleName());
+
+				if (role == null) {
+					continue;
+				}
+
+				for (String actionKey :
+						designLibraryRolePermission.getActionKeys()) {
+
+					_resourcePermissionLocalService.addResourcePermission(
+						companyId,
+						designLibraryRolePermission.getResourceName(),
+						ResourceConstants.SCOPE_COMPANY,
+						String.valueOf(companyId), role.getRoleId(), actionKey);
+				}
+			}
+		}
 	}
 
 	public void setupDesignLibraryRoles(long companyId) throws PortalException {
