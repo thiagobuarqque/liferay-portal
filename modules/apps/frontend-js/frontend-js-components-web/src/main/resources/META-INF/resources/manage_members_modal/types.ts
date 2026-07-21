@@ -22,7 +22,6 @@ export type RoleExternalReferenceCode =
 	| 'L_ASSET_LIBRARY_OWNER'
 	| 'L_DESIGN_LIBRARY_ADMINISTRATOR'
 	| 'L_DESIGN_LIBRARY_CONTENT_REVIEWER'
-	| 'L_DESIGN_LIBRARY_MEMBER'
 	| 'L_DESIGN_LIBRARY_OWNER';
 
 export interface UserRole {

@@ -185,7 +185,8 @@ public class DepotRoleUtil {
 						"library-administrators");
 		}
 		else if (Objects.equals(
-					DepotRolesConstants.DESIGN_LIBRARY_MEMBER, name)) {
+					DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER,
+					name)) {
 
 			return ResourceBundleUtil.getString(
 				resourceBundle,
@@ -240,9 +241,6 @@ public class DepotRoleUtil {
 			).put(
 				DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER,
 				"design-library-content-reviewer"
-			).put(
-				DepotRolesConstants.DESIGN_LIBRARY_MEMBER,
-				"design-library-member"
 			).put(
 				DepotRolesConstants.DESIGN_LIBRARY_OWNER, "design-library-owner"
 			).build());

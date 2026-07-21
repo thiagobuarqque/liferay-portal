@@ -42,7 +42,8 @@ public class DepotEntrySearchPermissionRoleContributor
 			if (FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")) {
 				groupRoleConsumer.accept(
 					_roleLocalService.getRole(
-						companyId, DepotRolesConstants.DESIGN_LIBRARY_MEMBER));
+						companyId,
+						DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER));
 			}
 		}
 		catch (PortalException portalException) {

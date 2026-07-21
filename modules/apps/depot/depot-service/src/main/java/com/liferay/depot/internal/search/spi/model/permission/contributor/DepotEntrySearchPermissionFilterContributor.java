@@ -84,10 +84,10 @@ public class DepotEntrySearchPermissionFilterContributor
 			return;
 		}
 
-		Role designLibraryMemberRole = _roleLocalService.fetchRole(
-			companyId, DepotRolesConstants.DESIGN_LIBRARY_MEMBER);
+		Role designLibraryContentReviewerRole = _roleLocalService.fetchRole(
+			companyId, DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER);
 
-		if (designLibraryMemberRole == null) {
+		if (designLibraryContentReviewerRole == null) {
 			return;
 		}
 
@@ -102,7 +102,7 @@ public class DepotEntrySearchPermissionFilterContributor
 			designLibraryGroupRolesTermsFilter.addValue(
 				StringBundler.concat(
 					groupId, StringPool.DASH,
-					designLibraryMemberRole.getRoleId()));
+					designLibraryContentReviewerRole.getRoleId()));
 		}
 
 		if (!designLibraryGroupRolesTermsFilter.isEmpty()) {

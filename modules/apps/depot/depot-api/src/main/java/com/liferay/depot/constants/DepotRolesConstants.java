@@ -35,13 +35,11 @@ public class DepotRolesConstants {
 	public static final String DESIGN_LIBRARY_CONTENT_REVIEWER =
 		"Design Library Content Reviewer";
 
-	public static final String DESIGN_LIBRARY_MEMBER = "Design Library Member";
-
 	public static final String DESIGN_LIBRARY_OWNER = "Design Library Owner";
 
 	public static final String[] DESIGN_LIBRARY_ROLE_NAMES = {
 		DESIGN_LIBRARY_ADMINISTRATOR, DESIGN_LIBRARY_CONTENT_REVIEWER,
-		DESIGN_LIBRARY_MEMBER, DESIGN_LIBRARY_OWNER
+		DESIGN_LIBRARY_OWNER
 	};
 
 	public static final String SUBTYPE_DESIGN_LIBRARY = "design-library";

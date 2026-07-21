@@ -65,17 +65,32 @@ public class DepotDesignLibraryRolesHelper {
 			companyId, DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER);
 
 		_resourcePermissionLocalService.addResourcePermission(
+			companyId, DepotEntry.class.getName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			contentReviewerRole.getRoleId(), ActionKeys.VIEW);
+
+		_resourcePermissionLocalService.addResourcePermission(
 			companyId, "com.liferay.asset.tags",
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
 			contentReviewerRole.getRoleId(), ActionKeys.MANAGE_TAG);
 
-		Role memberRole = _getOrCreateRole(
-			companyId, DepotRolesConstants.DESIGN_LIBRARY_MEMBER);
+		Role ownerRole = _getOrCreateRole(
+			companyId, DepotRolesConstants.DESIGN_LIBRARY_OWNER);
 
-		_resourcePermissionLocalService.addResourcePermission(
+		_resourcePermissionLocalService.setResourcePermissions(
 			companyId, DepotEntry.class.getName(),
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-			memberRole.getRoleId(), ActionKeys.VIEW);
+			ownerRole.getRoleId(),
+			ResourceActionsUtil.getResourceActions(
+				DepotEntry.class.getName()
+			).toArray(
+				new String[0]
+			));
+
+		_resourcePermissionLocalService.addResourcePermission(
+			companyId, "com.liferay.asset.tags",
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			ownerRole.getRoleId(), ActionKeys.MANAGE_TAG);
 
 		for (String name : DepotRolesConstants.DESIGN_LIBRARY_ROLE_NAMES) {
 			Role role = _getOrCreateRole(companyId, name);

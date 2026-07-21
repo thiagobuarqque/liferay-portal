@@ -242,17 +242,17 @@ public class DepotRoleTypeContributorTest {
 		_testIsAllowDeleteWithAdministrator();
 		_testIsAllowDeleteWithDesignLibraryAdministrator();
 		_testIsAllowDeleteWithDesignLibraryContentReviewer();
-		_testIsAllowDeleteWithDesignLibraryMember();
 		_testIsAllowDeleteWithDesignLibraryOwner();
 		_testIsAllowDeleteWithMember();
 		_testIsAllowDeleteWithOwner();
 	}
 
 	@Test
-	public void testIsAutomaticallyAssignedWithDesignLibraryMember() {
+	public void testIsAutomaticallyAssignedWithDesignLibraryContentReviewer() {
 		Assert.assertTrue(
 			_depotRoleTypeContributor.isAutomaticallyAssigned(
-				_mockRole(DepotRolesConstants.DESIGN_LIBRARY_MEMBER)));
+				_mockRole(
+					DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER)));
 	}
 
 	private Role _mockRole(String name) {
@@ -331,16 +331,10 @@ public class DepotRoleTypeContributorTest {
 	}
 
 	private void _testIsAllowDeleteWithDesignLibraryContentReviewer() {
-		Assert.assertTrue(
+		Assert.assertFalse(
 			_depotRoleTypeContributor.isAllowDelete(
 				_mockRole(
 					DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER)));
-	}
-
-	private void _testIsAllowDeleteWithDesignLibraryMember() {
-		Assert.assertFalse(
-			_depotRoleTypeContributor.isAllowDelete(
-				_mockRole(DepotRolesConstants.DESIGN_LIBRARY_MEMBER)));
 	}
 
 	private void _testIsAllowDeleteWithDesignLibraryOwner() {

@@ -125,7 +125,8 @@ public class DepotRoleTypeContributor implements RoleTypeContributor {
 				role.getName(),
 				DepotRolesConstants.DESIGN_LIBRARY_ADMINISTRATOR) ||
 			Objects.equals(
-				role.getName(), DepotRolesConstants.DESIGN_LIBRARY_MEMBER) ||
+				role.getName(),
+				DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER) ||
 			Objects.equals(
 				role.getName(), DepotRolesConstants.DESIGN_LIBRARY_OWNER)) {
 
@@ -143,7 +144,8 @@ public class DepotRoleTypeContributor implements RoleTypeContributor {
 				role.getName(),
 				DepotRolesConstants.ASSET_LIBRARY_CONNECTED_SITE_MEMBER) ||
 			Objects.equals(
-				role.getName(), DepotRolesConstants.DESIGN_LIBRARY_MEMBER)) {
+				role.getName(),
+				DepotRolesConstants.DESIGN_LIBRARY_CONTENT_REVIEWER)) {
 
 			return true;
 		}
