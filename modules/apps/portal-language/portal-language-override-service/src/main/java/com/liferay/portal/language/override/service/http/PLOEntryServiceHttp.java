@@ -293,7 +293,7 @@ public class PLOEntryServiceHttp {
 
 	public static java.util.List
 		<com.liferay.portal.language.override.model.PLOEntry> getPLOEntries(
-				HttpPrincipal httpPrincipal, long companyId)
+				HttpPrincipal httpPrincipal)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -301,8 +301,7 @@ public class PLOEntryServiceHttp {
 				PLOEntryServiceUtil.class, "getPLOEntries",
 				_getPLOEntriesParameterTypes6);
 
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId);
+			MethodHandler methodHandler = new MethodHandler(methodKey);
 
 			Object returnObj = null;
 
@@ -379,8 +378,7 @@ public class PLOEntryServiceHttp {
 		}
 	}
 
-	public static int getPLOEntriesCount(
-			HttpPrincipal httpPrincipal, long companyId)
+	public static int getPLOEntriesCount(HttpPrincipal httpPrincipal)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -388,8 +386,7 @@ public class PLOEntryServiceHttp {
 				PLOEntryServiceUtil.class, "getPLOEntriesCount",
 				_getPLOEntriesCountParameterTypes8);
 
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId);
+			MethodHandler methodHandler = new MethodHandler(methodKey);
 
 			Object returnObj = null;
 
@@ -600,14 +597,14 @@ public class PLOEntryServiceHttp {
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
 	private static final Class<?>[] _getPLOEntriesParameterTypes6 =
-		new Class[] {long.class};
+		new Class[] {};
 	private static final Class<?>[] _getPLOEntriesParameterTypes7 =
 		new Class[] {
 			String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
 	private static final Class<?>[] _getPLOEntriesCountParameterTypes8 =
-		new Class[] {long.class};
+		new Class[] {};
 	private static final Class<?>[] _getPLOEntriesCountParameterTypes9 =
 		new Class[] {String.class};
 	private static final Class<?>[]
@@ -620,4 +617,4 @@ public class PLOEntryServiceHttp {
 		new Class[] {String.class, java.util.Map.class};
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1685264705
+// LIFERAY-SERVICE-BUILDER-HASH:-2054363509
