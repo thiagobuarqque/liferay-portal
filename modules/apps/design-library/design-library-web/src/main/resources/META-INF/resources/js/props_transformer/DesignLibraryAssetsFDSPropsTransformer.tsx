@@ -35,29 +35,23 @@ export default function DesignLibraryAssetsFDSPropsTransformer(
 							rendererProps?.itemData
 						);
 
+						if (!resourceType) {
+							return null;
+						}
+
 						return (
 							<LinkRenderer
 								{...rendererProps}
 								options={{
-									actionId: resourceType
-										? resourceType.defaultActionId
-										: 'edit',
+									actionId: resourceType.defaultActionId,
 								}}
 								stickerClassName="design-library-fds-sticker"
 								stickerStyle={
 									{
-										'--design-library-sticker-color': `var(${
-											resourceType
-												? resourceType.color
-												: '--secondary'
-										})`,
+										'--design-library-sticker-color': `var(${resourceType.color})`,
 									} as React.CSSProperties
 								}
-								symbol={
-									resourceType
-										? resourceType.symbol
-										: 'documents-and-media'
-								}
+								symbol={resourceType.symbol}
 							/>
 						);
 					},
@@ -70,16 +64,20 @@ export default function DesignLibraryAssetsFDSPropsTransformer(
 					type: 'internal',
 				},
 				{
-					component: (rendererProps: any) => (
-						<ResourceTypeRenderer
-							label={
-								findResourceType(
-									resourceTypes,
-									rendererProps?.itemData
-								)?.label
-							}
-						/>
-					),
+					component: (rendererProps: any) => {
+						const resourceType = findResourceType(
+							resourceTypes,
+							rendererProps?.itemData
+						);
+
+						if (!resourceType) {
+							return null;
+						}
+
+						return (
+							<ResourceTypeRenderer label={resourceType.label} />
+						);
+					},
 					name: TableCellContentType.RESOURCE_TYPE,
 					type: 'internal',
 				},

@@ -23,12 +23,12 @@ export interface DesignLibraryResourceType {
 	key: string;
 	label: string;
 	symbol: string;
-	type?: string | null;
+	typeFilters?: Record<string, string>;
 }
 
 export interface DesignLibraryItemData {
 	entryClassName?: string;
-	type?: string | number;
+	[fieldName: string]: any;
 }
 
 interface Creator {

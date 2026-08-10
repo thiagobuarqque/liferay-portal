@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.taglib.aui.ESImport;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -37,6 +38,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,20 +62,45 @@ public class ViewResourcesDesignLibraryDisplayContext
 
 	public String getAPIURL() {
 		Set<String> entryClassNames = new LinkedHashSet<>();
+		Set<String> typeFilters = new LinkedHashSet<>();
 
 		for (DesignLibraryResourceTypeContributor
 				designLibraryResourceTypeContributor :
 					_getViewableDesignLibraryResourceTypeContributors()) {
 
-			entryClassNames.add(
-				designLibraryResourceTypeContributor.getEntryClassName());
+			String entryClassName =
+				designLibraryResourceTypeContributor.getEntryClassName();
+
+			entryClassNames.add(entryClassName);
+
+			StringBundler sb = new StringBundler();
+
+			sb.append("(classNameId eq ");
+			sb.append(PortalUtil.getClassNameId(entryClassName));
+
+			Map<String, String> contributorTypeFilters =
+				designLibraryResourceTypeContributor.getTypeFilters();
+
+			for (Map.Entry<String, String> entry :
+					contributorTypeFilters.entrySet()) {
+
+				sb.append(" and ");
+				sb.append(entry.getKey());
+				sb.append(" eq '");
+				sb.append(entry.getValue());
+				sb.append(StringPool.APOSTROPHE);
+			}
+
+			sb.append(StringPool.CLOSE_PARENTHESIS);
+
+			typeFilters.add(sb.toString());
 		}
 
 		return StringBundler.concat(
 			"/o/search/v1.0/search?emptySearch=true&entryClassNames=",
 			StringUtil.merge(entryClassNames, StringPool.COMMA),
-			"&filter=groupIds/any(g:g eq ", depotEntry.getGroupId(), ")",
-			"&nestedFields=embedded");
+			"&filter=groupIds/any(g:g eq ", depotEntry.getGroupId(), ") and (",
+			StringUtil.merge(typeFilters, " or "), ")&nestedFields=embedded");
 	}
 
 	public Map<String, Object> getBreadcrumbProps() throws PortalException {
@@ -148,7 +175,8 @@ public class ViewResourcesDesignLibraryDisplayContext
 				).put(
 					"symbol", designLibraryResourceTypeContributor.getIcon()
 				).put(
-					"type", designLibraryResourceTypeContributor.getType()
+					"typeFilters",
+					_getRowTypeFilters(designLibraryResourceTypeContributor)
 				).build();
 
 			String creationItemsModule = _resolveESImport(
@@ -329,6 +357,23 @@ public class ViewResourcesDesignLibraryDisplayContext
 		).buildString();
 	}
 
+	private Map<String, String> _getRowTypeFilters(
+		DesignLibraryResourceTypeContributor
+			designLibraryResourceTypeContributor) {
+
+		Map<String, String> rowTypeFilters = new LinkedHashMap<>();
+
+		Map<String, String> typeFilters =
+			designLibraryResourceTypeContributor.getTypeFilters();
+
+		for (Map.Entry<String, String> entry : typeFilters.entrySet()) {
+			rowTypeFilters.put(
+				"embedded.".concat(entry.getKey()), entry.getValue());
+		}
+
+		return rowTypeFilters;
+	}
+
 	private List<DesignLibraryResourceTypeContributor>
 		_getViewableDesignLibraryResourceTypeContributors() {
 
@@ -366,13 +411,11 @@ public class ViewResourcesDesignLibraryDisplayContext
 		DesignLibraryResourceTypeContributor
 			designLibraryResourceTypeContributor) {
 
-		String type = designLibraryResourceTypeContributor.getType();
-
-		return HashMapBuilder.<String, Object>put(
+		return LinkedHashMapBuilder.<String, Object>put(
 			"entryClassName",
 			designLibraryResourceTypeContributor.getEntryClassName()
-		).put(
-			() -> (type == null) ? null : "type", type
+		).putAll(
+			_getRowTypeFilters(designLibraryResourceTypeContributor)
 		).build();
 	}
 

@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -98,7 +99,7 @@ public interface DesignLibraryResourceTypeContributor {
 	 * <code>StyleBookEntry.class.getName()</code>.
 	 *
 	 * <p>
-	 * The name is added to the search query and, with {@link #getType},
+	 * The name is added to the search query and, with {@link #getTypeFilters},
 	 * identifies which rows belong to this type. Several types may share one
 	 * class name.
 	 * </p>
@@ -113,8 +114,8 @@ public interface DesignLibraryResourceTypeContributor {
 	 * hrefs from templates such as
 	 * <code>"{embedded.externalReferenceCode}"</code> that the data set expands
 	 * per row. Do not set visibility filters; the Design Library Admin stamps
-	 * them from {@link #getEntryClassName} and {@link #getType} so that one
-	 * type's actions never appear on another's rows.
+	 * them from {@link #getEntryClassName} and {@link #getTypeFilters} so that
+	 * one type's actions never appear on another's rows.
 	 * </p>
 	 *
 	 * <p>
@@ -148,23 +149,37 @@ public interface DesignLibraryResourceTypeContributor {
 	public String getLabel(Locale locale);
 
 	/**
-	 * Returns the value that the <code>type</code> field of a row must hold for
-	 * the row to belong to this type, or <code>null</code> when the entry class
-	 * name alone identifies it.
+	 * Returns the indexed fields and the values they must hold for a row to
+	 * belong to this type, or an empty map when the entry class name alone
+	 * identifies it.
 	 *
 	 * <p>
 	 * Override only when more than one type shares an entry class name.
-	 * Masters, display page templates, content page templates, and widget
+	 * Masters, display page templates, content page templates, and widget page
 	 * templates are all <code>LayoutPageTemplateEntry</code> and differ only by
 	 * its <code>type</code> field, so each returns the same entry class name
-	 * and a distinct value here. The value is compared as a string against the
-	 * indexed <code>type</code> field, so
+	 * and a distinct value here. Values are compared as strings, so
 	 * <code>LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT</code> becomes
 	 * <code>"3"</code>.
 	 * </p>
+	 *
+	 * <p>
+	 * Every entry must match, so a type whose identity rests on more than one
+	 * fact names each of them. Name the fields as the index holds them, since
+	 * they narrow the search query. Each one must also be surfaced under
+	 * <code>embedded</code> by the <code>DTOConverter</code> registered for
+	 * the entry class name, under the same name, because that is where the
+	 * Design Library Admin reads them back to tell one row from another.
+	 * </p>
+	 *
+	 * <p>
+	 * Do not name <code>status</code>. The search query applies it to every
+	 * row rather than to this type alone, so a value the other types do not
+	 * hold empties the whole listing instead of narrowing one type.
+	 * </p>
 	 */
-	public default String getType() {
-		return null;
+	public default Map<String, String> getTypeFilters() {
+		return Collections.emptyMap();
 	}
 
 	/**

@@ -5,8 +5,6 @@
 
 import React from 'react';
 
-const ResourceTypeRenderer = ({label}: {label?: string}) => (
-	<span>{label || ''}</span>
-);
+const ResourceTypeRenderer = ({label}: {label: string}) => <span>{label}</span>;
 
 export default ResourceTypeRenderer;

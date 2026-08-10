@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {getObjectValueFromPath} from 'frontend-js-web';
+
 import {DesignLibraryItemData, DesignLibraryResourceType} from '../types';
 
 /**
  * Matches a listed row to the resource type that contributed it. Several types
- * may share an entry class name, so a type that declares a type only matches
- * rows whose own type field holds that value.
+ * may share an entry class name, so a type that declares type filters only
+ * matches rows holding every value it names.
  */
 export default function findResourceType(
 	resourceTypes: DesignLibraryResourceType[],
@@ -23,10 +25,10 @@ export default function findResourceType(
 			return false;
 		}
 
-		if (resourceType.type === undefined || resourceType.type === null) {
-			return true;
-		}
-
-		return String(resourceType.type) === String(itemData.type);
+		return Object.entries(resourceType.typeFilters || {}).every(
+			([path, value]) =>
+				String(value) ===
+				String(getObjectValueFromPath({object: itemData, path}))
+		);
 	});
 }
