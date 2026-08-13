@@ -7,7 +7,7 @@ import {IFrontendDataSetProps} from '@liferay/frontend-data-set-web';
 import React from 'react';
 
 import {TableCellContentType} from '../constants';
-import openCreationModal from '../openCreationModal';
+import getCreationMenuItems from '../getCreationMenuItems';
 import {DesignLibraryResourceType} from '../types';
 import {
 	AuthorRenderer,
@@ -25,16 +25,7 @@ export default function DesignLibraryAssetsFDSPropsTransformer(
 	const resourceTypes: DesignLibraryResourceType[] =
 		props.additionalProps?.resourceTypes || [];
 
-	const primaryItems = resourceTypes.flatMap(
-		(resourceType) =>
-			resourceType.creationItems?.map(
-				(designLibraryResourceCreationItem) => ({
-					label: designLibraryResourceCreationItem.label,
-					onClick: () =>
-						openCreationModal(designLibraryResourceCreationItem),
-				})
-			) ?? []
-	);
+	const primaryItems = getCreationMenuItems(resourceTypes);
 
 	return {
 		...props,

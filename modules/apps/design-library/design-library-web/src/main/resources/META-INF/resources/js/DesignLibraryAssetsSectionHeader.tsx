@@ -8,7 +8,7 @@ import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import React from 'react';
 
-import openCreationModal from './openCreationModal';
+import getCreationMenuItems from './getCreationMenuItems';
 import {DesignLibraryResourceType} from './types';
 
 export default function DesignLibraryAssetsSectionHeader({
@@ -16,16 +16,7 @@ export default function DesignLibraryAssetsSectionHeader({
 }: {
 	resourceTypes?: DesignLibraryResourceType[];
 }) {
-	const creationItems = resourceTypes.flatMap(
-		(resourceType) =>
-			resourceType.creationItems?.map(
-				(designLibraryResourceCreationItem) => ({
-					label: designLibraryResourceCreationItem.label,
-					onClick: () =>
-						openCreationModal(designLibraryResourceCreationItem),
-				})
-			) ?? []
-	);
+	const creationItems = getCreationMenuItems(resourceTypes);
 
 	return (
 		<div className="align-items-center d-flex justify-content-between mb-3">
