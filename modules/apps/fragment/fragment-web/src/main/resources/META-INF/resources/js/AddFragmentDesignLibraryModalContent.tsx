@@ -10,7 +10,7 @@ import React from 'react';
 
 type FragmentCollection = {fragmentCollectionId: number; name: string};
 
-interface Props {
+export type AddFragmentDesignLibraryModalContentProps = {
 	addFragmentCollectionURL: string;
 	addFragmentEntryURL: string;
 	closeModal: () => void;
@@ -18,9 +18,9 @@ interface Props {
 	fragmentType: number;
 	mode: 'fragment' | 'set';
 	namespace: string;
-}
+};
 
-export default function DesignLibraryAddFragmentEntry({
+export default function AddFragmentDesignLibraryModalContent({
 	addFragmentCollectionURL,
 	addFragmentEntryURL,
 	closeModal,
@@ -28,7 +28,7 @@ export default function DesignLibraryAddFragmentEntry({
 	fragmentType,
 	mode,
 	namespace,
-}: Props) {
+}: AddFragmentDesignLibraryModalContentProps) {
 	const submitFragmentEntry = (
 		fragmentCollectionId: number,
 		fragmentName?: string

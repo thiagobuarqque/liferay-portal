@@ -225,7 +225,7 @@ public class FragmentDesignLibraryResourceTypeContributor
 
 		return new DesignLibraryResourceCreationItem(
 			id, LanguageUtil.get(httpServletRequest, languageKey),
-			"{DesignLibraryAddFragmentEntry} from fragment-web",
+			"{AddFragmentDesignLibraryModalContent} from fragment-web",
 			HashMapBuilder.<String, Object>putAll(
 				baseModuleProps
 			).put(
