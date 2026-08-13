@@ -5,61 +5,23 @@
 
 import {openModal} from 'frontend-js-components-web';
 import {loadModule} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 
 import {DesignLibraryResourceCreationItem} from './types';
 
-function LazyModal({
-	closeModal,
+type CreationModalComponent = React.ComponentType<
+	Record<string, unknown> & {closeModal: () => void}
+>;
+
+export default async function openCreationModal({
 	module,
 	moduleProps,
-}: {
-	closeModal: () => void;
-	module: string;
-	moduleProps: Record<string, unknown>;
-}) {
-	const [Component, setComponent] = useState<React.ComponentType<any> | null>(
-		null
-	);
+}: DesignLibraryResourceCreationItem) {
+	const Component: CreationModalComponent = await loadModule(module);
 
-	useEffect(() => {
-		let cancelled = false;
-
-		loadModule(module)
-			.then((loaded: any) => {
-				if (!cancelled) {
-					setComponent(() => loaded.default ?? loaded);
-				}
-			})
-			.catch((error: Error) => {
-				console.error(
-					`Unable to load creation modal from ${module}`,
-					error
-				);
-			});
-
-		return () => {
-			cancelled = true;
-		};
-	}, [module]);
-
-	if (!Component) {
-		return null;
-	}
-
-	return <Component {...moduleProps} closeModal={closeModal} />;
-}
-
-export default function openCreationModal(
-	designLibraryResourceCreationItem: DesignLibraryResourceCreationItem
-) {
 	openModal({
 		contentComponent: ({closeModal}: {closeModal: () => void}) => (
-			<LazyModal
-				closeModal={closeModal}
-				module={designLibraryResourceCreationItem.module}
-				moduleProps={designLibraryResourceCreationItem.moduleProps}
-			/>
+			<Component {...moduleProps} closeModal={closeModal} />
 		),
 	});
 }
