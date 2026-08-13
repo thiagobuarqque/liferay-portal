@@ -63,7 +63,8 @@ public class StyleBookDesignLibraryResourceTypeContributor
 			new DesignLibraryResourceCreationItem(
 				"add-style-book",
 				LanguageUtil.get(httpServletRequest, "new-style-book"),
-				"{AddStyleBookModalContent} from style-book-web",
+				"{AddStyleBookEntryDesignLibraryModalContent} from " +
+					"style-book-web",
 				HashMapBuilder.<String, Object>put(
 					"addStyleBookEntryURL",
 					_getAddStyleBookEntryURL(
