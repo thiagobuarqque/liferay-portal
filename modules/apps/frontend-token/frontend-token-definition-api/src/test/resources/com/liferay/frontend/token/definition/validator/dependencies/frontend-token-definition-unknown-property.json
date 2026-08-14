@@ -3,11 +3,9 @@
 		{
 			"frontendTokenSets": [
 				{
-					"description": "The grays of the color system",
 					"frontendTokens": [
 						{
 							"defaultValue": "#FFF",
-							"description": "The white color",
 							"editorType": "ColorPicker",
 							"label": "white",
 							"mappings": [
@@ -17,7 +15,8 @@
 								}
 							],
 							"name": "whiteColor",
-							"type": "String"
+							"type": "String",
+							"unknownProperty": "unknown"
 						}
 					],
 					"label": "grays",
