@@ -73,6 +73,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
@@ -194,9 +197,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			JSONFactoryUtil.createJSONObject(
 				targetGroupStyleBookEntry.getFrontendTokensValues());
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedFrontendTokensValuesJSONObject.toString(),
-			actualFrontendTokensValuesJSONObject.toString());
+			actualFrontendTokensValuesJSONObject.toString(),
+			JSONCompareMode.STRICT);
 
 		Assert.assertTrue(
 			Validator.isBlank(
@@ -314,9 +318,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			JSONFactoryUtil.createJSONObject(
 				updatedTargetGroupStyleBookEntry.getFrontendTokensValues());
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedFrontendTokensValuesJSONObject.toString(),
-			actualFrontendTokensValuesJSONObject.toString());
+			actualFrontendTokensValuesJSONObject.toString(),
+			JSONCompareMode.STRICT);
 	}
 
 	@Test
@@ -375,9 +380,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			JSONFactoryUtil.createJSONObject(
 				updatedTargetGroupStyleBookEntry.getFrontendTokenDefinition());
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedFrontendTokenDefinitionJSONObject.toString(),
-			actualFrontendTokenDefinitionJSONObject.toString());
+			actualFrontendTokenDefinitionJSONObject.toString(),
+			JSONCompareMode.STRICT);
 	}
 
 	@Test
@@ -467,13 +473,15 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			JSONFactoryUtil.createJSONObject(
 				updatedTargetStyleBookEntry.getFrontendTokensValues());
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedFrontendTokensValuesJSONObject.toString(),
-			actualFrontendTokensValuesJSONObject.toString());
+			actualFrontendTokensValuesJSONObject.toString(),
+			JSONCompareMode.STRICT);
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			targetStyleBookEntry.getFrontendTokenDefinition(),
-			updatedTargetStyleBookEntry.getFrontendTokenDefinition());
+			updatedTargetStyleBookEntry.getFrontendTokenDefinition(),
+			JSONCompareMode.STRICT);
 	}
 
 	@Test
@@ -576,9 +584,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			JSONFactoryUtil.createJSONObject(
 				targetGroupStyleBookEntry.getFrontendTokenDefinition());
 
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedFrontendTokenDefinitionJSONObject.toString(),
-			actualFrontendTokenDefinitionJSONObject.toString());
+			actualFrontendTokenDefinitionJSONObject.toString(),
+			JSONCompareMode.STRICT);
 	}
 
 	@Test
@@ -1065,9 +1074,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 				JSONFactoryUtil.createJSONObject(
 					StringUtil.read(zipFile.getInputStream(zipEntry)));
 
-			Assert.assertEquals(
+			JSONAssert.assertEquals(
 				expectedFrontendTokenDefinitionJSONObject.toString(),
-				actualFrontendTokenDefinitionJSONObject.toString());
+				actualFrontendTokenDefinitionJSONObject.toString(),
+				JSONCompareMode.STRICT);
 		}
 
 		if (_isStyleBookTokensValuesFile(zipEntry.getName())) {
@@ -1079,9 +1089,10 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 				JSONFactoryUtil.createJSONObject(
 					StringUtil.read(zipFile.getInputStream(zipEntry)));
 
-			Assert.assertEquals(
+			JSONAssert.assertEquals(
 				expectedFrontendTokensValuesJSONObject.toString(),
-				actualFrontendTokensValuesJSONObject.toString());
+				actualFrontendTokensValuesJSONObject.toString(),
+				JSONCompareMode.STRICT);
 		}
 
 		if (_isStyleBookThumbnailFile(zipEntry.getName())) {
