@@ -8,6 +8,7 @@ package com.liferay.style.book.service.impl;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
@@ -161,8 +162,19 @@ public class StyleBookEntryLocalServiceImplTest {
 
 		StyleBookEntry styleBookEntry = _mockStyleBookEntry(styleBookEntryId);
 
-		_styleBookEntryLocalService.updateFrontendTokenDefinition(
-			styleBookEntryId, frontendTokenDefinition);
+		Mockito.when(
+			_styleBookEntryPersistence.update(
+				Mockito.eq(styleBookEntry), Mockito.any(ServiceContext.class))
+		).thenReturn(
+			styleBookEntry
+		);
+
+		StyleBookEntry updatedStyleBookEntry =
+			_styleBookEntryLocalService.updateFrontendTokenDefinition(
+				styleBookEntryId, frontendTokenDefinition,
+				new ServiceContext());
+
+		Assert.assertEquals(styleBookEntry, updatedStyleBookEntry);
 
 		Mockito.verify(
 			styleBookEntry
@@ -192,7 +204,8 @@ public class StyleBookEntryLocalServiceImplTest {
 			DuplicateStyleBookEntryFrontendTokenException.class,
 			"Frontend token \"primaryColor\" is defined more than once",
 			() -> _styleBookEntryLocalService.updateFrontendTokenDefinition(
-				styleBookEntryId, frontendTokenDefinition));
+				styleBookEntryId, frontendTokenDefinition,
+				new ServiceContext()));
 	}
 
 	private void _testUpdateFrontendTokenDefinitionWithInvalidJSON()
@@ -206,7 +219,7 @@ public class StyleBookEntryLocalServiceImplTest {
 			StyleBookEntryFrontendTokenDefinitionException.class,
 			"Unable to parse frontend token definition",
 			() -> _styleBookEntryLocalService.updateFrontendTokenDefinition(
-				styleBookEntryId, "{not valid json"));
+				styleBookEntryId, "{not valid json", new ServiceContext()));
 	}
 
 	private void _testUpdateFrontendTokenDefinitionWithInvalidJSONSchema()
@@ -229,7 +242,8 @@ public class StyleBookEntryLocalServiceImplTest {
 			StyleBookEntryFrontendTokenDefinitionException.class,
 			"Unable to parse frontend token definition",
 			() -> _styleBookEntryLocalService.updateFrontendTokenDefinition(
-				styleBookEntryId, frontendTokenDefinition));
+				styleBookEntryId, frontendTokenDefinition,
+				new ServiceContext()));
 	}
 
 	private void _testUpdateFrontendTokenDefinitionWithValidFrontendTokenDefinition()
@@ -240,7 +254,8 @@ public class StyleBookEntryLocalServiceImplTest {
 		StyleBookEntry styleBookEntry = _mockStyleBookEntry(styleBookEntryId);
 
 		Mockito.when(
-			_styleBookEntryPersistence.update(styleBookEntry)
+			_styleBookEntryPersistence.update(
+				Mockito.eq(styleBookEntry), Mockito.any(ServiceContext.class))
 		).thenReturn(
 			styleBookEntry
 		);
@@ -253,7 +268,8 @@ public class StyleBookEntryLocalServiceImplTest {
 
 		StyleBookEntry updatedStyleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
-				styleBookEntryId, frontendTokenDefinition);
+				styleBookEntryId, frontendTokenDefinition,
+				new ServiceContext());
 
 		Assert.assertEquals(styleBookEntry, updatedStyleBookEntry);
 
