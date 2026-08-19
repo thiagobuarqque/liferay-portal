@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipWriter;
 
 /**
@@ -51,6 +52,8 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 
 		path = path + StringPool.SLASH + getStyleBookEntryKey();
 
+		String frontendTokenDefinition = getFrontendTokenDefinition();
+
 		JSONObject jsonObject = JSONUtil.put(
 			"frontendTokensValuesPath", "frontend-tokens-values.json"
 		).put(
@@ -58,6 +61,12 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 		).put(
 			"themeId", getThemeId()
 		);
+
+		if (!Validator.isBlank(frontendTokenDefinition)) {
+			jsonObject.put(
+				"frontendTokenDefinitionPath",
+				"frontend-token-definition.json");
+		}
 
 		FileEntry previewFileEntry = _getPreviewFileEntry();
 
@@ -69,6 +78,12 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 
 		zipWriter.addEntry(
 			path + "/style-book.json", JSONUtil.toString(jsonObject));
+
+		if (!Validator.isBlank(frontendTokenDefinition)) {
+			zipWriter.addEntry(
+				path + "/frontend-token-definition.json",
+				frontendTokenDefinition);
+		}
 
 		zipWriter.addEntry(
 			path + "/frontend-tokens-values.json", getFrontendTokensValues());
