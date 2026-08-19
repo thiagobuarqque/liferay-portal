@@ -5,6 +5,9 @@
 
 package com.liferay.frontend.token.definition.util;
 
+import com.liferay.frontend.token.definition.FrontendToken;
+import com.liferay.frontend.token.definition.FrontendTokenDefinition;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -15,12 +18,33 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Gabriel Lima
  */
 public class FrontendTokenDefinitionUtil {
+
+	public static Set<String> getAvailableFrontendTokenNames(
+		String frontendTokenDefinition,
+		FrontendTokenDefinition themeFrontendTokenDefinition) {
+
+		Set<String> frontendTokenNames = new HashSet<>();
+
+		if (themeFrontendTokenDefinition != null) {
+			frontendTokenNames.addAll(
+				TransformUtil.transform(
+					themeFrontendTokenDefinition.getFrontendTokens(),
+					FrontendToken::getName));
+		}
+
+		frontendTokenNames.addAll(
+			getFrontendTokenNames(frontendTokenDefinition));
+
+		return frontendTokenNames;
+	}
 
 	public static List<String> getFrontendTokenNames(
 		String frontendTokenDefinition) {
