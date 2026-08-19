@@ -137,6 +137,28 @@ public class StyleBookEntryLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
+	public StyleBookEntry addStyleBookEntry(
+			String externalReferenceCode, long userId, long groupId,
+			boolean defaultStyleBookEntry, String frontendTokenDefinition,
+			String frontendTokensValues, String name,
+			String styleBookEntryKey, String themeId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_validateFrontendTokenDefinition(frontendTokenDefinition);
+
+		StyleBookEntry styleBookEntry = addStyleBookEntry(
+			externalReferenceCode, userId, groupId, defaultStyleBookEntry,
+			frontendTokensValues, name, styleBookEntryKey, themeId,
+			serviceContext);
+
+		return updateFrontendTokenDefinition(
+			styleBookEntry.getStyleBookEntryId(), frontendTokenDefinition,
+			serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
 	public StyleBookEntry copyStyleBookEntry(
 			long userId, long groupId, long sourceStyleBookEntryId,
 			ServiceContext serviceContext)
@@ -654,6 +676,27 @@ public class StyleBookEntryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public StyleBookEntry updateStyleBookEntry(
+			long userId, long styleBookEntryId, boolean defaultStylebookEntry,
+			String frontendTokenDefinition, String frontendTokensValues,
+			String name, String styleBookEntryKey, long previewFileEntryId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_validateFrontendTokenDefinition(frontendTokenDefinition);
+
+		StyleBookEntry styleBookEntry = updateStyleBookEntry(
+			userId, styleBookEntryId, defaultStylebookEntry,
+			frontendTokensValues, name, styleBookEntryKey, previewFileEntryId,
+			serviceContext);
+
+		return updateFrontendTokenDefinition(
+			styleBookEntry.getStyleBookEntryId(), frontendTokenDefinition,
+			serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public StyleBookEntry updateStyleBookEntry(
 			long styleBookEntryId, String frontendTokensValues, String name,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -677,6 +720,24 @@ public class StyleBookEntryLocalServiceImpl
 		}
 
 		return styleBookEntryPersistence.update(styleBookEntry, serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public StyleBookEntry updateStyleBookEntry(
+			long styleBookEntryId, String frontendTokenDefinition,
+			String frontendTokensValues, String name,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_validateFrontendTokenDefinition(frontendTokenDefinition);
+
+		StyleBookEntry styleBookEntry = updateStyleBookEntry(
+			styleBookEntryId, frontendTokensValues, name, serviceContext);
+
+		return updateFrontendTokenDefinition(
+			styleBookEntry.getStyleBookEntryId(), frontendTokenDefinition,
+			serviceContext);
 	}
 
 	private long _copyStyleBookEntryPreviewFileEntry(
