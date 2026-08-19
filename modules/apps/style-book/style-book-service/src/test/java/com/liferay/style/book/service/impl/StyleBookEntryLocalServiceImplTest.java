@@ -47,6 +47,21 @@ public class StyleBookEntryLocalServiceImplTest {
 	}
 
 	@Test
+	public void testAddStyleBookEntryWithInvalidFrontendTokenDefinition()
+		throws Exception {
+
+		AssertUtils.assertFailure(
+			StyleBookEntryFrontendTokenDefinitionException.class,
+			"Unable to parse frontend token definition",
+			() -> _styleBookEntryLocalService.addStyleBookEntry(
+				RandomTestUtil.randomString(), RandomTestUtil.randomLong(),
+				RandomTestUtil.randomLong(), false, "{not valid json",
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				new ServiceContext()));
+	}
+
+	@Test
 	public void testGetStyleBookEntries() {
 		_styleBookEntryLocalService.getStyleBookEntries(
 			RandomTestUtil.randomLong(), RandomTestUtil.randomString());

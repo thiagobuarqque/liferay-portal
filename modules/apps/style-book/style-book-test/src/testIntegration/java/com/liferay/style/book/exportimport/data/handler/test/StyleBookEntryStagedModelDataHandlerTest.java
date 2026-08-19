@@ -28,6 +28,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
+import com.liferay.style.book.test.util.FrontendTokenDefinitionTestUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,131 @@ public class StyleBookEntryStagedModelDataHandlerTest
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@Test
+	public void testExportImportDoesNotWarnWhenThemeHasNoFrontendTokenDefinition()
+		throws Exception {
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				false,
+				JSONUtil.put(
+					"this-token-does-not-exist",
+					JSONUtil.put("value", "#000000")
+				).toString(),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				"admin_WAR_admintheme",
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		exportImportStagedModel(styleBookEntry);
+
+		StyleBookEntry importedStyleBookEntry = (StyleBookEntry)getStagedModel(
+			styleBookEntry.getUuid(), liveGroup);
+
+		Assert.assertNotNull(importedStyleBookEntry);
+
+		Assert.assertNull(
+			_getWarningExportImportReportEntry(liveGroup.getGroupId()));
+	}
+
+	@Test
+	public void testExportImportDoesNotWarnWhenTokenIsScopedToStyleBookDefinition()
+		throws Exception {
+
+		String frontendTokenName = "scopedOnlyToken";
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				false,
+				JSONUtil.put(
+					frontendTokenName, JSONUtil.put("value", "#000000")
+				).toString(),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				"classic_WAR_classictheme",
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		styleBookEntry =
+			_styleBookEntryLocalService.updateFrontendTokenDefinition(
+				styleBookEntry.getStyleBookEntryId(),
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(frontendTokenName),
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		exportImportStagedModel(styleBookEntry);
+
+		StyleBookEntry importedStyleBookEntry = (StyleBookEntry)getStagedModel(
+			styleBookEntry.getUuid(), liveGroup);
+
+		Assert.assertNotNull(importedStyleBookEntry);
+
+		Assert.assertNull(
+			_getWarningExportImportReportEntry(liveGroup.getGroupId()));
+	}
+
+	@Test
+	public void testExportImportPreservesFrontendTokenDefinition()
+		throws Exception {
+
+		StyleBookEntry styleBookEntry = (StyleBookEntry)addStagedModel(
+			stagingGroup, new HashMap<>());
+
+		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+			"primaryColor");
+
+		styleBookEntry =
+			_styleBookEntryLocalService.updateFrontendTokenDefinition(
+				styleBookEntry.getStyleBookEntryId(), frontendTokenDefinition,
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		// Make sure the dates are different
+
+		Thread.sleep(1000);
+
+		exportImportStagedModel(styleBookEntry);
+
+		StyleBookEntry importedStyleBookEntry = (StyleBookEntry)getStagedModel(
+			styleBookEntry.getUuid(), liveGroup);
+
+		Assert.assertNotNull(importedStyleBookEntry);
+		Assert.assertEquals(
+			frontendTokenDefinition,
+			importedStyleBookEntry.getFrontendTokenDefinition());
+		DateTestUtil.assertEquals(
+			styleBookEntry.getModifiedDate(),
+			importedStyleBookEntry.getModifiedDate());
+
+		String updatedFrontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+			"secondaryColor");
+
+		styleBookEntry =
+			_styleBookEntryLocalService.updateFrontendTokenDefinition(
+				styleBookEntry.getStyleBookEntryId(),
+				updatedFrontendTokenDefinition,
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		// Make sure the dates are different
+
+		Thread.sleep(1000);
+
+		exportImportStagedModel(styleBookEntry);
+
+		importedStyleBookEntry = (StyleBookEntry)getStagedModel(
+			styleBookEntry.getUuid(), liveGroup);
+
+		Assert.assertNotNull(importedStyleBookEntry);
+		Assert.assertEquals(
+			updatedFrontendTokenDefinition,
+			importedStyleBookEntry.getFrontendTokenDefinition());
+		DateTestUtil.assertEquals(
+			styleBookEntry.getModifiedDate(),
+			importedStyleBookEntry.getModifiedDate());
+	}
 
 	@Test
 	public void testExportImportPreservesModifiedDateWithPreviewFileEntry()
@@ -188,6 +314,43 @@ public class StyleBookEntryStagedModelDataHandlerTest
 				).toString(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				"classic_WAR_classictheme",
+				ServiceContextTestUtil.getServiceContext(
+					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		exportImportStagedModel(styleBookEntry);
+
+		StyleBookEntry importedStyleBookEntry = (StyleBookEntry)getStagedModel(
+			styleBookEntry.getUuid(), liveGroup);
+
+		Assert.assertNotNull(importedStyleBookEntry);
+
+		ExportImportReportEntry exportImportReportEntry =
+			_getWarningExportImportReportEntry(liveGroup.getGroupId());
+
+		String errorMessage = exportImportReportEntry.getErrorMessage();
+
+		Assert.assertTrue(errorMessage.contains("do not exist"));
+	}
+
+	@Test
+	public void
+			testExportImportWarnsWhenTokenIsMissingAndThemeHasNoFrontendTokenDefinition()
+		throws Exception {
+
+		String frontendTokenName = "primaryColor";
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				false,
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					frontendTokenName),
+				JSONUtil.put(
+					"this-token-does-not-exist",
+					JSONUtil.put("value", "#000000")
+				).toString(),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				"admin_WAR_admintheme",
 				ServiceContextTestUtil.getServiceContext(
 					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
 
