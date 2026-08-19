@@ -49,9 +49,10 @@ public class StylebookEntryStagedModelRepository
 			styleBookEntry.getExternalReferenceCode(), userId,
 			styleBookEntry.getGroupId(),
 			styleBookEntry.isDefaultStyleBookEntry(),
-			styleBookEntry.getFrontendTokensValues(), styleBookEntry.getName(),
-			styleBookEntry.getStyleBookEntryKey(), styleBookEntry.getThemeId(),
-			serviceContext);
+			styleBookEntry.getFrontendTokenDefinition(),
+			styleBookEntry.getFrontendTokensValues(),
+			styleBookEntry.getName(), styleBookEntry.getStyleBookEntryKey(),
+			styleBookEntry.getThemeId(), serviceContext);
 	}
 
 	@Override
@@ -128,14 +129,17 @@ public class StylebookEntryStagedModelRepository
 			StyleBookEntry styleBookEntry)
 		throws PortalException {
 
+		ServiceContext serviceContext = portletDataContext.createServiceContext(
+			styleBookEntry);
+
 		return _styleBookEntryLocalService.updateStyleBookEntry(
 			portletDataContext.getUserId(styleBookEntry.getUserUuid()),
 			styleBookEntry.getStyleBookEntryId(),
 			styleBookEntry.isDefaultStyleBookEntry(),
-			styleBookEntry.getFrontendTokensValues(), styleBookEntry.getName(),
-			styleBookEntry.getStyleBookEntryKey(),
-			styleBookEntry.getPreviewFileEntryId(),
-			portletDataContext.createServiceContext(styleBookEntry));
+			styleBookEntry.getFrontendTokenDefinition(),
+			styleBookEntry.getFrontendTokensValues(),
+			styleBookEntry.getName(), styleBookEntry.getStyleBookEntryKey(),
+			styleBookEntry.getPreviewFileEntryId(), serviceContext);
 	}
 
 	@Reference
