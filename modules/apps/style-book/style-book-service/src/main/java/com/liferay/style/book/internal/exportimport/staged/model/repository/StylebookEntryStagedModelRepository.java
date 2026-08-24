@@ -129,9 +129,6 @@ public class StylebookEntryStagedModelRepository
 			StyleBookEntry styleBookEntry)
 		throws PortalException {
 
-		ServiceContext serviceContext = portletDataContext.createServiceContext(
-			styleBookEntry);
-
 		return _styleBookEntryLocalService.updateStyleBookEntry(
 			portletDataContext.getUserId(styleBookEntry.getUserUuid()),
 			styleBookEntry.getStyleBookEntryId(),
@@ -139,7 +136,8 @@ public class StylebookEntryStagedModelRepository
 			styleBookEntry.getFrontendTokenDefinition(),
 			styleBookEntry.getFrontendTokensValues(), styleBookEntry.getName(),
 			styleBookEntry.getStyleBookEntryKey(),
-			styleBookEntry.getPreviewFileEntryId(), serviceContext);
+			styleBookEntry.getPreviewFileEntryId(),
+			portletDataContext.createServiceContext(styleBookEntry));
 	}
 
 	@Reference
