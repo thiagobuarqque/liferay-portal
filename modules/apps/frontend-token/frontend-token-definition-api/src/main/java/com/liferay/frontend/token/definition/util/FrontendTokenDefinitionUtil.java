@@ -26,10 +26,10 @@ import java.util.List;
 public class FrontendTokenDefinitionUtil {
 
 	public static List<String> getFrontendTokenNames(
-		String frontendTokenDefinition) {
+		String frontendTokenDefinitionJSON) {
 
 		JSONObject frontendTokenDefinitionJSONObject = _parse(
-			frontendTokenDefinition);
+			frontendTokenDefinitionJSON);
 
 		if (frontendTokenDefinitionJSONObject == null) {
 			return Collections.emptyList();
@@ -61,20 +61,20 @@ public class FrontendTokenDefinitionUtil {
 	}
 
 	public static List<String> getFrontendTokenNames(
-		String frontendTokenDefinition,
-		FrontendTokenDefinition themeFrontendTokenDefinition) {
+		String frontendTokenDefinitionJSON,
+		FrontendTokenDefinition frontendTokenDefinition) {
 
 		List<String> frontendTokenNames = new ArrayList<>();
 
-		if (themeFrontendTokenDefinition != null) {
+		if (frontendTokenDefinition != null) {
 			frontendTokenNames.addAll(
 				TransformUtil.transform(
-					themeFrontendTokenDefinition.getFrontendTokens(),
+					frontendTokenDefinition.getFrontendTokens(),
 					FrontendToken::getName));
 		}
 
 		frontendTokenNames.addAll(
-			getFrontendTokenNames(frontendTokenDefinition));
+			getFrontendTokenNames(frontendTokenDefinitionJSON));
 
 		return frontendTokenNames;
 	}
@@ -119,13 +119,14 @@ public class FrontendTokenDefinitionUtil {
 		}
 	}
 
-	private static JSONObject _parse(String frontendTokenDefinition) {
-		if (Validator.isNull(frontendTokenDefinition)) {
+	private static JSONObject _parse(String frontendTokenDefinitionJSON) {
+		if (Validator.isNull(frontendTokenDefinitionJSON)) {
 			return null;
 		}
 
 		try {
-			return JSONFactoryUtil.createJSONObject(frontendTokenDefinition);
+			return JSONFactoryUtil.createJSONObject(
+				frontendTokenDefinitionJSON);
 		}
 		catch (JSONException jsonException) {
 			if (_log.isWarnEnabled()) {
