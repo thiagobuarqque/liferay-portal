@@ -108,7 +108,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 							INVALID) &&
 					(styleBookEntry != null) &&
 					!_isValidFrontendTokensValues(
-						_getFrontendTokenNames(themeDisplay, styleBookEntry),
+						_getFrontendTokenNames(styleBookEntry, themeDisplay),
 						styleBookEntry)) {
 
 					SessionMessages.add(
@@ -127,7 +127,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 	}
 
 	private List<String> _getFrontendTokenNames(
-		ThemeDisplay themeDisplay, StyleBookEntry styleBookEntry) {
+		StyleBookEntry styleBookEntry, ThemeDisplay themeDisplay) {
 
 		FrontendTokenDefinition themeFrontendTokenDefinition =
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
