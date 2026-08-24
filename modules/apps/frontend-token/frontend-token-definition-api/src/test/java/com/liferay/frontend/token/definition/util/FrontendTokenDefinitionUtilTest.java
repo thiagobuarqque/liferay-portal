@@ -10,7 +10,7 @@ import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
@@ -18,7 +18,6 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -38,20 +37,15 @@ public class FrontendTokenDefinitionUtilTest {
 		LiferayUnitTestRule.INSTANCE;
 
 	@Test
-	public void testGetAvailableFrontendTokenNames() {
-		_testGetAvailableFrontendTokenNamesWithBlankDefinitions();
-		_testGetAvailableFrontendTokenNamesWithoutThemeDefinition();
-		_testGetAvailableFrontendTokenNamesWithThemeAndOwnDefinitions();
-	}
-
-	@Test
 	public void testGetFrontendTokenNames() {
 		_testGetFrontendTokenNamesWithBlankDefinition();
 		_testGetFrontendTokenNamesWithDuplicateName();
 		_testGetFrontendTokenNamesWithInvalidCategories();
 		_testGetFrontendTokenNamesWithInvalidSetsAndTokens();
 		_testGetFrontendTokenNamesWithMalformedDefinition();
+		_testGetFrontendTokenNamesWithThemeAndOwnDefinitions();
 		_testGetFrontendTokenNamesWithValidDefinition();
+		_testGetFrontendTokenNamesWithoutThemeDefinition();
 	}
 
 	private String _createFrontendTokenDefinitionJSON(
@@ -97,60 +91,6 @@ public class FrontendTokenDefinitionUtilTest {
 		return frontendTokenDefinition;
 	}
 
-	private void _testGetAvailableFrontendTokenNamesWithBlankDefinitions() {
-		Set<String> frontendTokenNames =
-			FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
-				null, null);
-
-		Assert.assertTrue(frontendTokenNames.isEmpty());
-
-		frontendTokenNames =
-			FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
-				"", null);
-
-		Assert.assertTrue(frontendTokenNames.isEmpty());
-	}
-
-	private void _testGetAvailableFrontendTokenNamesWithoutThemeDefinition() {
-		Set<String> frontendTokenNames =
-			FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
-				_createFrontendTokenDefinitionJSON(
-					JSONUtil.putAll(
-						JSONUtil.put(
-							"frontendTokens",
-							JSONUtil.putAll(
-								JSONUtil.put("name", "primaryColor"))
-						).put(
-							"name", RandomTestUtil.randomString()
-						))),
-				null);
-
-		Assert.assertEquals(
-			SetUtil.fromArray("primaryColor"), frontendTokenNames);
-	}
-
-	private void _testGetAvailableFrontendTokenNamesWithThemeAndOwnDefinitions() {
-		FrontendTokenDefinition themeFrontendTokenDefinition =
-			_mockFrontendTokenDefinition("secondaryColor");
-
-		Set<String> frontendTokenNames =
-			FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
-				_createFrontendTokenDefinitionJSON(
-					JSONUtil.putAll(
-						JSONUtil.put(
-							"frontendTokens",
-							JSONUtil.putAll(
-								JSONUtil.put("name", "primaryColor"))
-						).put(
-							"name", RandomTestUtil.randomString()
-						))),
-				themeFrontendTokenDefinition);
-
-		Assert.assertEquals(
-			SetUtil.fromArray("primaryColor", "secondaryColor"),
-			frontendTokenNames);
-	}
-
 	private void _testGetFrontendTokenNamesWithBlankDefinition() {
 		List<String> frontendTokenNames =
 			FrontendTokenDefinitionUtil.getFrontendTokenNames(null);
@@ -159,6 +99,16 @@ public class FrontendTokenDefinitionUtilTest {
 
 		frontendTokenNames = FrontendTokenDefinitionUtil.getFrontendTokenNames(
 			"");
+
+		Assert.assertTrue(frontendTokenNames.isEmpty());
+
+		frontendTokenNames = FrontendTokenDefinitionUtil.getFrontendTokenNames(
+			null, null);
+
+		Assert.assertTrue(frontendTokenNames.isEmpty());
+
+		frontendTokenNames = FrontendTokenDefinitionUtil.getFrontendTokenNames(
+			"", null);
 
 		Assert.assertTrue(frontendTokenNames.isEmpty());
 	}
@@ -242,6 +192,38 @@ public class FrontendTokenDefinitionUtilTest {
 				"Unable to parse frontend token definition",
 				logEntry.getMessage());
 		}
+	}
+
+	private void _testGetFrontendTokenNamesWithoutThemeDefinition() {
+		Assert.assertEquals(
+			ListUtil.fromArray("primaryColor"),
+			FrontendTokenDefinitionUtil.getFrontendTokenNames(
+				_createFrontendTokenDefinitionJSON(
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"frontendTokens",
+							JSONUtil.putAll(
+								JSONUtil.put("name", "primaryColor"))
+						).put(
+							"name", RandomTestUtil.randomString()
+						))),
+				null));
+	}
+
+	private void _testGetFrontendTokenNamesWithThemeAndOwnDefinitions() {
+		Assert.assertEquals(
+			ListUtil.fromArray("secondaryColor", "primaryColor"),
+			FrontendTokenDefinitionUtil.getFrontendTokenNames(
+				_createFrontendTokenDefinitionJSON(
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"frontendTokens",
+							JSONUtil.putAll(
+								JSONUtil.put("name", "primaryColor"))
+						).put(
+							"name", RandomTestUtil.randomString()
+						))),
+				_mockFrontendTokenDefinition("secondaryColor")));
 	}
 
 	private void _testGetFrontendTokenNamesWithValidDefinition() {

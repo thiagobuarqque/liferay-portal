@@ -33,7 +33,6 @@ import jakarta.portlet.ActionResponse;
 import java.io.File;
 
 import java.util.List;
-import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -109,8 +108,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 							INVALID) &&
 					(styleBookEntry != null) &&
 					!_isValidFrontendTokensValues(
-						_getAvailableFrontendTokenNames(
-							themeDisplay, styleBookEntry),
+						_getFrontendTokenNames(themeDisplay, styleBookEntry),
 						styleBookEntry)) {
 
 					SessionMessages.add(
@@ -128,14 +126,14 @@ public class ImportStyleBookEntriesMVCActionCommand
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	private Set<String> _getAvailableFrontendTokenNames(
+	private List<String> _getFrontendTokenNames(
 		ThemeDisplay themeDisplay, StyleBookEntry styleBookEntry) {
 
 		FrontendTokenDefinition themeFrontendTokenDefinition =
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
 				themeDisplay.getCompanyId(), styleBookEntry.getThemeId());
 
-		return FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
+		return FrontendTokenDefinitionUtil.getFrontendTokenNames(
 			styleBookEntry.getFrontendTokenDefinition(),
 			themeFrontendTokenDefinition);
 	}
@@ -150,7 +148,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 	}
 
 	private boolean _isValidFrontendTokensValues(
-			Set<String> frontendTokenNames, StyleBookEntry styleBookEntry)
+			List<String> frontendTokenNames, StyleBookEntry styleBookEntry)
 		throws JSONException {
 
 		JSONObject frontendTokensValuesJSONObject =

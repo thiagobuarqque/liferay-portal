@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -214,20 +213,20 @@ public class StylebookEntryStagedModelDataHandler
 		return _stagedModelRepository;
 	}
 
-	private Set<String> _getAvailableFrontendTokenNames(
+	private List<String> _getFrontendTokenNames(
 		PortletDataContext portletDataContext, StyleBookEntry styleBookEntry) {
 
 		FrontendTokenDefinition themeFrontendTokenDefinition =
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
 				portletDataContext.getCompanyId(), styleBookEntry.getThemeId());
 
-		return FrontendTokenDefinitionUtil.getAvailableFrontendTokenNames(
+		return FrontendTokenDefinitionUtil.getFrontendTokenNames(
 			styleBookEntry.getFrontendTokenDefinition(),
 			themeFrontendTokenDefinition);
 	}
 
 	private boolean _hasMissingTokens(
-			Set<String> frontendTokenNames, String frontendTokensValues)
+			List<String> frontendTokenNames, String frontendTokensValues)
 		throws Exception {
 
 		if (frontendTokenNames.isEmpty() ||
@@ -281,7 +280,7 @@ public class StylebookEntryStagedModelDataHandler
 			warningMessages.add(themeWarningMessage);
 		}
 		else if (_hasMissingTokens(
-					_getAvailableFrontendTokenNames(
+					_getFrontendTokenNames(
 						portletDataContext, importedStyleBookEntry),
 					importedStyleBookEntry.getFrontendTokensValues())) {
 
