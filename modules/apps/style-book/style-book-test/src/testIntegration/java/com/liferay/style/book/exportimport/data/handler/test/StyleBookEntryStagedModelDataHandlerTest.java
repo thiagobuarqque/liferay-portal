@@ -101,7 +101,8 @@ public class StyleBookEntryStagedModelDataHandlerTest
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
 				styleBookEntry.getStyleBookEntryId(),
-				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(frontendTokenName),
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					frontendTokenName),
 				ServiceContextTestUtil.getServiceContext(
 					stagingGroup.getGroupId(), TestPropsValues.getUserId()));
 
@@ -123,8 +124,9 @@ public class StyleBookEntryStagedModelDataHandlerTest
 		StyleBookEntry styleBookEntry = (StyleBookEntry)addStagedModel(
 			stagingGroup, new HashMap<>());
 
-		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"primaryColor");
+		String frontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"primaryColor");
 
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
@@ -149,8 +151,9 @@ public class StyleBookEntryStagedModelDataHandlerTest
 			styleBookEntry.getModifiedDate(),
 			importedStyleBookEntry.getModifiedDate());
 
-		String updatedFrontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"secondaryColor");
+		String updatedFrontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"secondaryColor");
 
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
@@ -333,8 +336,7 @@ public class StyleBookEntryStagedModelDataHandlerTest
 	}
 
 	@Test
-	public void
-			testExportImportWarnsWhenTokenIsMissingAndThemeHasNoFrontendTokenDefinition()
+	public void testExportImportWarnsWhenTokenIsMissingAndThemeHasNoFrontendTokenDefinition()
 		throws Exception {
 
 		String frontendTokenName = "primaryColor";

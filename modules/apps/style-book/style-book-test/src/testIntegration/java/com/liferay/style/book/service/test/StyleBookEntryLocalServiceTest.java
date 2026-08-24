@@ -126,8 +126,9 @@ public class StyleBookEntryLocalServiceTest {
 				RandomTestUtil.randomString(), null,
 				RandomTestUtil.randomString(), _serviceContext);
 
-		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"primaryColor");
+		String frontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"primaryColor");
 
 		sourceStyleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
@@ -137,8 +138,9 @@ public class StyleBookEntryLocalServiceTest {
 		StyleBookEntry draftStyleBookEntry =
 			_styleBookEntryLocalService.getDraft(sourceStyleBookEntry);
 
-		String draftFrontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"secondaryColor");
+		String draftFrontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"secondaryColor");
 
 		draftStyleBookEntry.setFrontendTokenDefinition(
 			draftFrontendTokenDefinition);
@@ -254,8 +256,9 @@ public class StyleBookEntryLocalServiceTest {
 
 		long styleBookEntryId = styleBookEntry.getStyleBookEntryId();
 
-		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"primaryColor");
+		String frontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"primaryColor");
 
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
