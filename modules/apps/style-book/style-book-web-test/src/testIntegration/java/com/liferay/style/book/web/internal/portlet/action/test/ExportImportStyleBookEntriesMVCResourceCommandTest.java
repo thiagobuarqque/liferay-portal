@@ -352,8 +352,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			TestPropsValues.getUserId(), _targetGroup.getGroupId(), file,
 			false);
 
-		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"primaryColor");
+		String frontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"primaryColor");
 
 		StyleBookEntry updatedStyleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
@@ -376,6 +377,7 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		JSONObject expectedFrontendTokenDefinitionJSONObject =
 			JSONFactoryUtil.createJSONObject(frontendTokenDefinition);
+
 		JSONObject actualFrontendTokenDefinitionJSONObject =
 			JSONFactoryUtil.createJSONObject(
 				updatedTargetGroupStyleBookEntry.getFrontendTokenDefinition());
@@ -430,7 +432,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		updatedStyleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
 				updatedStyleBookEntry.getStyleBookEntryId(),
-				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition("primaryColor"), serviceContext);
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					"primaryColor"),
+				serviceContext);
 
 		file = ReflectionTestUtil.invoke(
 			_exportStyleBookEntriesMVCResourceCommand,
@@ -466,9 +470,15 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			targetStyleBookEntry.getName(),
 			updatedTargetStyleBookEntry.getName());
 
+		JSONAssert.assertEquals(
+			targetStyleBookEntry.getFrontendTokenDefinition(),
+			updatedTargetStyleBookEntry.getFrontendTokenDefinition(),
+			JSONCompareMode.STRICT);
+
 		JSONObject expectedFrontendTokensValuesJSONObject =
 			JSONFactoryUtil.createJSONObject(
 				targetStyleBookEntry.getFrontendTokensValues());
+
 		JSONObject actualFrontendTokensValuesJSONObject =
 			JSONFactoryUtil.createJSONObject(
 				updatedTargetStyleBookEntry.getFrontendTokensValues());
@@ -476,11 +486,6 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		JSONAssert.assertEquals(
 			expectedFrontendTokensValuesJSONObject.toString(),
 			actualFrontendTokensValuesJSONObject.toString(),
-			JSONCompareMode.STRICT);
-
-		JSONAssert.assertEquals(
-			targetStyleBookEntry.getFrontendTokenDefinition(),
-			updatedTargetStyleBookEntry.getFrontendTokenDefinition(),
 			JSONCompareMode.STRICT);
 	}
 
@@ -518,7 +523,8 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		_styleBookEntryLocalService.updateFrontendTokenDefinition(
 			targetGroupStyleBookEntry.getStyleBookEntryId(),
-			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(RandomTestUtil.randomString()),
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				RandomTestUtil.randomString()),
 			ServiceContextTestUtil.getServiceContext(
 				_targetGroup, TestPropsValues.getUserId()));
 
@@ -553,8 +559,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 				RandomTestUtil.randomString(), styleBookEntryKey,
 				RandomTestUtil.randomString(), serviceContext);
 
-		String frontendTokenDefinition = FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
-			"primaryColor");
+		String frontendTokenDefinition =
+			FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+				"primaryColor");
 
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
@@ -580,6 +587,7 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		JSONObject expectedFrontendTokenDefinitionJSONObject =
 			JSONFactoryUtil.createJSONObject(frontendTokenDefinition);
+
 		JSONObject actualFrontendTokenDefinitionJSONObject =
 			JSONFactoryUtil.createJSONObject(
 				targetGroupStyleBookEntry.getFrontendTokenDefinition());
@@ -610,7 +618,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
 				styleBookEntry.getStyleBookEntryId(),
-				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition("primaryColor"), serviceContext);
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					"primaryColor"),
+				serviceContext);
 
 		File file = ReflectionTestUtil.invoke(
 			_exportStyleBookEntriesMVCResourceCommand,
@@ -632,11 +642,14 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		Assert.assertEquals(
 			importResultEntries.toString(), 1, importResultEntries.size());
+
+		StyleBookEntryZipProcessorImportResultEntry
+			styleBookEntryZipProcessorImportResultEntry =
+				importResultEntries.get(0);
+
 		Assert.assertEquals(
 			StyleBookEntryZipProcessorImportResultEntry.Status.INVALID,
-			importResultEntries.get(
-				0
-			).getStatus());
+			styleBookEntryZipProcessorImportResultEntry.getStatus());
 
 		Assert.assertEquals(
 			0,
@@ -672,7 +685,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
 				styleBookEntry.getStyleBookEntryId(),
-				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(frontendTokenName), serviceContext);
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					frontendTokenName),
+				serviceContext);
 
 		File file = ReflectionTestUtil.invoke(
 			_exportStyleBookEntriesMVCResourceCommand,
@@ -765,7 +780,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		styleBookEntry =
 			_styleBookEntryLocalService.updateFrontendTokenDefinition(
 				styleBookEntry.getStyleBookEntryId(),
-				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition("primaryColor"), serviceContext);
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					"primaryColor"),
+				serviceContext);
 
 		File file = ReflectionTestUtil.invoke(
 			_exportStyleBookEntriesMVCResourceCommand,
