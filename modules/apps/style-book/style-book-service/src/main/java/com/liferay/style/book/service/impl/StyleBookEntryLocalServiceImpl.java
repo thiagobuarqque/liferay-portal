@@ -534,10 +534,6 @@ public class StyleBookEntryLocalServiceImpl
 			updateDraft(draftStyleBookEntry);
 		}
 
-		if (serviceContext == null) {
-			return styleBookEntryPersistence.update(styleBookEntry);
-		}
-
 		return styleBookEntryPersistence.update(styleBookEntry, serviceContext);
 	}
 
