@@ -14,7 +14,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -456,11 +455,14 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		Assert.assertEquals(
 			importResultEntries.toString(), 1, importResultEntries.size());
+
+		StyleBookEntryZipProcessorImportResultEntry
+			styleBookEntryZipProcessorImportResultEntry =
+				importResultEntries.get(0);
+
 		Assert.assertEquals(
 			StyleBookEntryZipProcessorImportResultEntry.Status.INVALID,
-			importResultEntries.get(
-				0
-			).getStatus());
+			styleBookEntryZipProcessorImportResultEntry.getStatus());
 
 		StyleBookEntry updatedTargetStyleBookEntry =
 			_styleBookEntryLocalService.fetchStyleBookEntry(
@@ -470,10 +472,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			targetStyleBookEntry.getName(),
 			updatedTargetStyleBookEntry.getName());
 
-		JSONAssert.assertEquals(
+		Assert.assertEquals(
 			targetStyleBookEntry.getFrontendTokenDefinition(),
-			updatedTargetStyleBookEntry.getFrontendTokenDefinition(),
-			JSONCompareMode.STRICT);
+			updatedTargetStyleBookEntry.getFrontendTokenDefinition());
 
 		JSONObject expectedFrontendTokensValuesJSONObject =
 			JSONFactoryUtil.createJSONObject(
@@ -834,11 +835,11 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		return (Layout)ProxyUtil.newProxyInstance(
 			Layout.class.getClassLoader(), new Class<?>[] {Layout.class},
 			(proxy, method, args) -> {
-				if (Objects.equals(method.getName(), "getType")) {
-					return LayoutConstants.TYPE_CONTROL_PANEL;
+				if (Objects.equals(method.getName(), "isTypeControlPanel")) {
+					return true;
 				}
 
-				return null;
+				return method.invoke(proxy, args);
 			});
 	}
 
@@ -891,7 +892,6 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 				_getMockMultipartHttpServletRequest(file));
 
 		mockLiferayPortletActionRequest.addParameter("overwrite", "false");
-		mockLiferayPortletActionRequest.addParameter("redirect", "fakeURL");
 		mockLiferayPortletActionRequest.setAttribute(
 			JavaConstants.JAKARTA_PORTLET_CONFIG, _getPortletConfig());
 		mockLiferayPortletActionRequest.setAttribute(
