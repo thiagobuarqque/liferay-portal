@@ -50,9 +50,9 @@ public class StylebookEntryStagedModelRepository
 			styleBookEntry.getGroupId(),
 			styleBookEntry.isDefaultStyleBookEntry(),
 			styleBookEntry.getFrontendTokenDefinition(),
-			styleBookEntry.getFrontendTokensValues(),
-			styleBookEntry.getName(), styleBookEntry.getStyleBookEntryKey(),
-			styleBookEntry.getThemeId(), serviceContext);
+			styleBookEntry.getFrontendTokensValues(), styleBookEntry.getName(),
+			styleBookEntry.getStyleBookEntryKey(), styleBookEntry.getThemeId(),
+			serviceContext);
 	}
 
 	@Override
@@ -137,8 +137,8 @@ public class StylebookEntryStagedModelRepository
 			styleBookEntry.getStyleBookEntryId(),
 			styleBookEntry.isDefaultStyleBookEntry(),
 			styleBookEntry.getFrontendTokenDefinition(),
-			styleBookEntry.getFrontendTokensValues(),
-			styleBookEntry.getName(), styleBookEntry.getStyleBookEntryKey(),
+			styleBookEntry.getFrontendTokensValues(), styleBookEntry.getName(),
+			styleBookEntry.getStyleBookEntryKey(),
 			styleBookEntry.getPreviewFileEntryId(), serviceContext);
 	}
 
