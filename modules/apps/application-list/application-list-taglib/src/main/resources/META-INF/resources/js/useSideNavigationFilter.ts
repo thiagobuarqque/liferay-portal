@@ -15,12 +15,54 @@ interface SideNavigationFilter {
 const EMPTY_KEYS_SET = new Set<React.Key>();
 const EMPTY_FILTER = {expandedKeys: EMPTY_KEYS_SET, items: []};
 
+function removeFilterOnlyItems(
+	items?: Array<SideNavigationItem>
+): Array<SideNavigationItem> {
+	if (!items) {
+		return [];
+	}
+
+	const visibleItems = items.reduce<Array<SideNavigationItem>>(
+		(visibleItems, item) => {
+			if (item.filterOnly) {
+				return visibleItems;
+			}
+
+			const visibleChildItems = removeFilterOnlyItems(item.items);
+
+			if (item.items && visibleChildItems !== item.items) {
+				return visibleItems.concat({
+					...item,
+					items: visibleChildItems.length
+						? visibleChildItems
+						: undefined,
+				});
+			}
+
+			return visibleItems.concat(item);
+		},
+		[]
+	);
+
+	const itemsUnchanged =
+		visibleItems.length === items.length &&
+		visibleItems.every(
+			(visibleItem, index) => visibleItem === items[index]
+		);
+
+	if (itemsUnchanged) {
+		return items;
+	}
+
+	return visibleItems;
+}
+
 export function filterItemsByQuery(
 	items: Array<SideNavigationItem>,
 	query: string
 ): SideNavigationFilter {
 	if (!query) {
-		return {items};
+		return {items: removeFilterOnlyItems(items)};
 	}
 
 	return items.reduce<Required<SideNavigationFilter>>((result, item) => {
@@ -45,9 +87,16 @@ export function filterItemsByQuery(
 			}
 
 			if (labelMatches) {
+				const visibleChildItems = removeFilterOnlyItems(item.items);
+
 				return {
 					expandedKeys: new Set([...result.expandedKeys, item.id]),
-					items: result.items.concat(item),
+					items: result.items.concat({
+						...item,
+						items: visibleChildItems.length
+							? visibleChildItems
+							: undefined,
+					}),
 				};
 			}
 		}

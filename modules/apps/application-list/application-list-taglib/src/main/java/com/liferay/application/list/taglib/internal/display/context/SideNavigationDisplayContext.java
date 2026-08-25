@@ -15,6 +15,8 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.portlet.LiferayPortletURL;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -23,6 +25,8 @@ import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.product.menu.constants.ProductNavigationProductMenuPortletKeys;
 import com.liferay.site.item.selector.SiteItemSelectorCriterion;
+
+import jakarta.portlet.PortletRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -90,6 +94,23 @@ public class SideNavigationDisplayContext {
 			"items", _getPropsItems()
 		).put(
 			"label", _panelCategory.getLabel(_themeDisplay.getLocale())
+		).put(
+			"navigationItemsUrl",
+			() -> {
+				LiferayPortletURL navigationItemsURL =
+					PortletURLFactoryUtil.create(
+						_httpServletRequest,
+						ProductNavigationProductMenuPortletKeys.
+							PRODUCT_NAVIGATION_PRODUCT_MENU,
+						PortletRequest.RESOURCE_PHASE);
+
+				navigationItemsURL.setResourceID(
+					"/product_navigation_product_menu/get_navigation_items");
+				navigationItemsURL.setParameter(
+					"selectedPortletId", _portletId);
+
+				return navigationItemsURL.toString();
+			}
 		).put(
 			"portletId", StringPool.BLANK
 		).put(
