@@ -131,7 +131,7 @@ public class ViewResourcesDesignLibraryDisplayContext
 		).setRedirect(
 			viewResourcesURL
 		).setParameter(
-			"backURLTitle", depotGroup.getName(themeDisplay.getLocale())
+			"p_l_back_url_title", depotGroup.getName(themeDisplay.getLocale())
 		).setParameter(
 			"styleBookEntryId", "{embedded.id}"
 		).buildString();
