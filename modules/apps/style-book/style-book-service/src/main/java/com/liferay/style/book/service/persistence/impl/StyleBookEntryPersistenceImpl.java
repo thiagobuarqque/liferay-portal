@@ -3346,6 +3346,7 @@ public class StyleBookEntryPersistenceImpl
 		ctMergeColumnNames.add("previewFileEntryId");
 		ctMergeColumnNames.add("styleBookEntryKey");
 		ctMergeColumnNames.add("themeId");
+		ctMergeColumnNames.add("status");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
@@ -4263,4 +4264,4 @@ public class StyleBookEntryPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1849446001
+// LIFERAY-SERVICE-BUILDER-HASH:-885107530
