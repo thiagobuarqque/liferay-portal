@@ -140,13 +140,7 @@ public class StyleBookEntryLocalServiceImpl
 		styleBookEntry.setThemeId(themeId);
 
 		if (defaultStyleBookEntry) {
-			StyleBookEntry oldDefaultStyleBookEntry =
-				fetchDefaultStyleBookEntry(groupId, themeId);
-
-			if (oldDefaultStyleBookEntry != null) {
-				updateDefaultStyleBookEntry(
-					oldDefaultStyleBookEntry.getStyleBookEntryId(), false);
-			}
+			_unsetDefaultStyleBookEntries(groupId, 0, themeId);
 
 			styleBookEntry.setDefaultStyleBookEntry(true);
 		}
@@ -253,8 +247,8 @@ public class StyleBookEntryLocalServiceImpl
 	public StyleBookEntry fetchDefaultStyleBookEntry(
 		long groupId, String themeId) {
 
-		return styleBookEntryPersistence.fetchByG_D_T_First(
-			groupId, true, themeId, null);
+		return styleBookEntryPersistence.fetchByG_D_T_Head_First(
+			groupId, true, themeId, true, null);
 	}
 
 	@Override
@@ -461,49 +455,47 @@ public class StyleBookEntryLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
+	public StyleBookEntry publishDraft(StyleBookEntry draftStyleBookEntry)
+		throws PortalException {
+
+		StyleBookEntry publishedStyleBookEntry = fetchStyleBookEntry(
+			draftStyleBookEntry.getHeadId());
+
+		if (publishedStyleBookEntry != null) {
+			draftStyleBookEntry.setDefaultStyleBookEntry(
+				publishedStyleBookEntry.isDefaultStyleBookEntry());
+		}
+
+		return super.publishDraft(draftStyleBookEntry);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
 	public StyleBookEntry updateDefaultStyleBookEntry(
 			long styleBookEntryId, boolean defaultStyleBookEntry)
 		throws PortalException {
 
 		StyleBookEntry styleBookEntry = fetchStyleBookEntry(styleBookEntryId);
 
+		if (styleBookEntry != null) {
+			styleBookEntry = fetchPublished(styleBookEntry);
+		}
+
 		if (styleBookEntry == null) {
 			return null;
 		}
 
-		StyleBookEntry oldDefaultStyleBookEntry =
-			styleBookEntryPersistence.fetchByG_D_T_First(
-				styleBookEntry.getGroupId(), true, styleBookEntry.getThemeId(),
-				null);
-
-		if (defaultStyleBookEntry && (oldDefaultStyleBookEntry != null) &&
-			(oldDefaultStyleBookEntry.getStyleBookEntryId() !=
-				styleBookEntryId)) {
-
-			oldDefaultStyleBookEntry.setDefaultStyleBookEntry(false);
-
-			StyleBookEntry oldDefaultDraftStyleBookEntry = fetchDraft(
-				oldDefaultStyleBookEntry);
-
-			if (oldDefaultDraftStyleBookEntry != null) {
-				oldDefaultDraftStyleBookEntry.setDefaultStyleBookEntry(false);
-
-				updateDraft(oldDefaultDraftStyleBookEntry);
-			}
-
-			styleBookEntryPersistence.update(oldDefaultStyleBookEntry);
+		if (defaultStyleBookEntry) {
+			_unsetDefaultStyleBookEntries(
+				styleBookEntry.getGroupId(),
+				styleBookEntry.getStyleBookEntryId(),
+				styleBookEntry.getThemeId());
 		}
 
-		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setDefaultStyleBookEntry(defaultStyleBookEntry);
 
-		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
-
-		if (draftStyleBookEntry != null) {
-			draftStyleBookEntry.setDefaultStyleBookEntry(defaultStyleBookEntry);
-
-			updateDraft(draftStyleBookEntry);
-		}
+		_updateDraftDefaultStyleBookEntry(
+			defaultStyleBookEntry, styleBookEntry);
 
 		return styleBookEntryPersistence.update(styleBookEntry);
 	}
@@ -733,6 +725,11 @@ public class StyleBookEntryLocalServiceImpl
 		StyleBookEntry styleBookEntry =
 			styleBookEntryPersistence.findByPrimaryKey(styleBookEntryId);
 
+		if (!styleBookEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"Unable to update draft style book entry " + styleBookEntryId);
+		}
+
 		_validate(styleBookEntry.getGroupId(), name, styleBookEntryId);
 
 		_validateFrontendTokenDefinition(frontendTokenDefinition);
@@ -769,16 +766,13 @@ public class StyleBookEntryLocalServiceImpl
 		styleBookEntry.setStyleBookEntryKey(styleBookEntryKey);
 
 		if (defaultStyleBookEntry) {
-			StyleBookEntry oldDefaultStyleBookEntry =
-				fetchDefaultStyleBookEntry(
-					styleBookEntry.getGroupId(), styleBookEntry.getThemeId());
-
-			if (oldDefaultStyleBookEntry != null) {
-				updateDefaultStyleBookEntry(
-					oldDefaultStyleBookEntry.getStyleBookEntryId(), false);
-			}
+			_unsetDefaultStyleBookEntries(
+				styleBookEntry.getGroupId(), styleBookEntryId,
+				styleBookEntry.getThemeId());
 
 			styleBookEntry.setDefaultStyleBookEntry(true);
+
+			_updateDraftDefaultStyleBookEntry(true, styleBookEntry);
 		}
 
 		return styleBookEntryPersistence.update(styleBookEntry, serviceContext);
@@ -888,6 +882,39 @@ public class StyleBookEntryLocalServiceImpl
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private void _unsetDefaultStyleBookEntries(
+			long groupId, long styleBookEntryId, String themeId)
+		throws PortalException {
+
+		for (StyleBookEntry styleBookEntry :
+				styleBookEntryPersistence.findByG_D_T_Head(
+					groupId, true, themeId, true)) {
+
+			if (styleBookEntry.getStyleBookEntryId() != styleBookEntryId) {
+				styleBookEntry.setDefaultStyleBookEntry(false);
+
+				_updateDraftDefaultStyleBookEntry(false, styleBookEntry);
+
+				styleBookEntryPersistence.update(styleBookEntry);
+			}
+		}
+	}
+
+	private void _updateDraftDefaultStyleBookEntry(
+			boolean defaultStyleBookEntry, StyleBookEntry styleBookEntry)
+		throws PortalException {
+
+		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
+
+		if (draftStyleBookEntry == null) {
+			return;
+		}
+
+		draftStyleBookEntry.setDefaultStyleBookEntry(defaultStyleBookEntry);
+
+		updateDraft(draftStyleBookEntry);
 	}
 
 	private void _validate(Long groupId, String name, Long styleBookEntryId)
