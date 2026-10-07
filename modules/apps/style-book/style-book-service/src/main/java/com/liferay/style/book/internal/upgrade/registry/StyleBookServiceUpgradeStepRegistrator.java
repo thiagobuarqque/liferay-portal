@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.style.book.internal.upgrade.v1_10_0.StyleBookEntryFrontendTokensValuesUpgradeProcess;
+import com.liferay.style.book.internal.upgrade.v1_10_1.StyleBookEntryDefaultStyleBookEntryUpgradeProcess;
 import com.liferay.style.book.internal.upgrade.v1_1_0.StyleBookEntryUpgradeProcess;
 import com.liferay.style.book.internal.upgrade.v1_2_0.StyleBookEntryVersionUpgradeProcess;
 import com.liferay.style.book.internal.upgrade.v1_7_0.StyleBookEntryThemeIdUpgradeProcess;
@@ -24,6 +25,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
+ * @author Thiago Buarque
  */
 @Component(service = UpgradeStepRegistrator.class)
 public class StyleBookServiceUpgradeStepRegistrator
@@ -106,6 +108,10 @@ public class StyleBookServiceUpgradeStepRegistrator
 		registry.register(
 			"1.9.0", "1.10.0",
 			new StyleBookEntryFrontendTokensValuesUpgradeProcess());
+
+		registry.register(
+			"1.10.0", "1.10.1",
+			new StyleBookEntryDefaultStyleBookEntryUpgradeProcess());
 	}
 
 	@Reference
