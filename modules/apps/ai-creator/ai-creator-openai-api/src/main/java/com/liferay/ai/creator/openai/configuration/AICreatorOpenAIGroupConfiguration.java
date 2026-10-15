@@ -13,8 +13,8 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Lourdes Fernández Besada
  */
 @ExtendedObjectClassDefinition(
-	category = "ai-creator", generateUI = false,
-	scope = ExtendedObjectClassDefinition.Scope.GROUP
+	category = "ai-creator", scope = ExtendedObjectClassDefinition.Scope.GROUP,
+	strictScope = true
 )
 @Meta.OCD(
 	id = "com.liferay.ai.creator.openai.configuration.AICreatorOpenAIGroupConfiguration",
