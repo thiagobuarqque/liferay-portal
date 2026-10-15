@@ -11,7 +11,7 @@ export function itemSelectorValueFromLayout(value) {
 	const id = value.plid ?? value.layoutPageTemplateEntryId;
 
 	return {
-		id: id === undefined || id === null ? undefined : String(id),
+		id: String(id),
 		name: value.name,
 		private: value.private,
 		url: url.toString(),
