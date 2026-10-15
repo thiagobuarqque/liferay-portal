@@ -14,10 +14,8 @@ public class LockedLayoutsSiteSettingsConfigurationDisplayContext
 	implements LockedLayoutsConfigurationDisplayContext {
 
 	public LockedLayoutsSiteSettingsConfigurationDisplayContext(
-		boolean hasConfiguration,
 		LockedLayoutsGroupConfiguration lockedLayoutsGroupConfiguration) {
 
-		_hasConfiguration = hasConfiguration;
 		_lockedLayoutsGroupConfiguration = lockedLayoutsGroupConfiguration;
 	}
 
@@ -28,7 +26,11 @@ public class LockedLayoutsSiteSettingsConfigurationDisplayContext
 
 	@Override
 	public boolean hasConfiguration() {
-		return _hasConfiguration;
+
+		// Configuration admin already alerts when the configuration is not
+		// saved
+
+		return true;
 	}
 
 	@Override
@@ -37,7 +39,6 @@ public class LockedLayoutsSiteSettingsConfigurationDisplayContext
 			allowAutomaticUnlockingProcess();
 	}
 
-	private final boolean _hasConfiguration;
 	private final LockedLayoutsGroupConfiguration
 		_lockedLayoutsGroupConfiguration;
 

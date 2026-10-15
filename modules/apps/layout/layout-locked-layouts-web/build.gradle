@@ -18,7 +18,6 @@ dependencies {
 	compileOnly project(":apps:locked-items:locked-items-api")
 	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-settings:portal-settings-api")
-	compileOnly project(":apps:site:site-api")
 	compileOnly project(":apps:staging:staging-api")
 	compileOnly project(":apps:static:portal-configuration:portal-configuration-metatype-api")
 	compileOnly project(":core:petra:petra-function")

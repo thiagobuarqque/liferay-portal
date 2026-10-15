@@ -13,8 +13,8 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Mikel Lorza
  */
 @ExtendedObjectClassDefinition(
-	category = "pages", generateUI = false,
-	scope = ExtendedObjectClassDefinition.Scope.GROUP
+	category = "pages", scope = ExtendedObjectClassDefinition.Scope.GROUP,
+	strictScope = true
 )
 @Meta.OCD(
 	id = "com.liferay.layout.configuration.LockedLayoutsGroupConfiguration",
