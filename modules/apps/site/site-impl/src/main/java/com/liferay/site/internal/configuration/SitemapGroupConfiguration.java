@@ -13,8 +13,8 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Lourdes Fernández Besada
  */
 @ExtendedObjectClassDefinition(
-	category = "seo", generateUI = false,
-	scope = ExtendedObjectClassDefinition.Scope.GROUP
+	category = "seo", scope = ExtendedObjectClassDefinition.Scope.GROUP,
+	strictScope = true
 )
 @Meta.OCD(
 	id = "com.liferay.site.internal.configuration.SitemapGroupConfiguration",
