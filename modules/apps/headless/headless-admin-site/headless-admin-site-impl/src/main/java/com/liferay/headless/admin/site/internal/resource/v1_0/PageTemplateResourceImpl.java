@@ -12,6 +12,7 @@ import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageTemplate;
 import com.liferay.headless.admin.site.dto.v1_0.NavigationSettings;
@@ -280,7 +281,8 @@ public class PageTemplateResourceImpl
 				contextUriInfo, contextUser),
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+				_fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
 				ServiceContextUtil.createServiceContext(
@@ -682,9 +684,10 @@ public class PageTemplateResourceImpl
 			layoutPageTemplateEntry.getPlid());
 
 		LayoutUtil.updatePortletLayout(
-			_cetManager, layout, nameMap, layout.getTitleMap(),
-			layout.getDescriptionMap(), layout.getKeywordsMap(),
-			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			_cetManager, _frontendTokenDefinitionRegistry, layout, nameMap,
+			layout.getTitleMap(), layout.getDescriptionMap(),
+			layout.getKeywordsMap(), layout.getRobotsMap(),
+			layout.getFriendlyURLMap(),
 			_getWidgetPageTemplateTypeSettingsUnicodeProperties(
 				widgetPageTemplate.getPageTemplateSettings()),
 			serviceContext, widgetPageSpecification);
@@ -729,8 +732,8 @@ public class PageTemplateResourceImpl
 			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		Layout layout = LayoutUtil.addContentLayout(
-			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry,
+			_cetManager, _fragmentEntryProcessorRegistry,
+			_frontendTokenDefinitionRegistry, groupId, _infoItemServiceRegistry,
 			contentPageTemplate.getPageSpecifications(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			null, LayoutConstants.TYPE_CONTENT, null, true, true,
@@ -909,10 +912,11 @@ public class PageTemplateResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(), layout.getRobotsMap(),
-			layout.getFriendlyURLMap(), layout.getTypeSettingsProperties(),
+			_frontendTokenDefinitionRegistry, _infoItemServiceRegistry, layout,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
+			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			layout.getTypeSettingsProperties(),
 			contentPageTemplate.getPageSpecifications(), serviceContext);
 
 		if (layout.isPublished() && !layoutPageTemplateEntry.isApproved()) {
@@ -975,9 +979,10 @@ public class PageTemplateResourceImpl
 			layoutPageTemplateEntry.getPlid());
 
 		LayoutUtil.updatePortletLayout(
-			_cetManager, layout, nameMap, layout.getTitleMap(),
-			layout.getDescriptionMap(), layout.getKeywordsMap(),
-			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			_cetManager, _frontendTokenDefinitionRegistry, layout, nameMap,
+			layout.getTitleMap(), layout.getDescriptionMap(),
+			layout.getKeywordsMap(), layout.getRobotsMap(),
+			layout.getFriendlyURLMap(),
 			_getWidgetPageTemplateTypeSettingsUnicodeProperties(
 				widgetPageTemplate.getPageTemplateSettings()),
 			serviceContext,
@@ -1003,6 +1008,9 @@ public class PageTemplateResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

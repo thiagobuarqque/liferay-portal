@@ -7,6 +7,7 @@ package com.liferay.headless.admin.site.internal.resource.v1_0;
 
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecificationVersion;
@@ -163,10 +164,10 @@ public class PageSpecificationVersionResourceImpl
 
 		draftLayout = LayoutUtil.updateLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, draftLayout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
-			draftLayout.getFriendlyURLMap(),
+			_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
+			draftLayout, layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), draftLayout.getKeywordsMap(),
+			draftLayout.getRobotsMap(), draftLayout.getFriendlyURLMap(),
 			ContentPageSpecification.unsafeToDTO(
 				layoutContentVersion.getData()),
 			WorkflowConstants.STATUS_DRAFT,
@@ -266,6 +267,9 @@ public class PageSpecificationVersionResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

@@ -10,6 +10,7 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ClassSubtypeReference;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate;
@@ -469,7 +470,8 @@ public class DisplayPageTemplateResourceImpl
 				contextUriInfo, contextUser),
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+				_fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
 				ServiceContextUtil.createServiceContext(
@@ -648,9 +650,9 @@ public class DisplayPageTemplateResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(),
+			_frontendTokenDefinitionRegistry, _infoItemServiceRegistry, layout,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			_getRobotsMap(displayPageTemplate.getDisplayPageTemplateSettings()),
 			LocalizedMapUtil.getLocalizedMap(
 				displayPageTemplate.getFriendlyUrlPath_i18n()),
@@ -774,8 +776,8 @@ public class DisplayPageTemplateResourceImpl
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		Layout layout = LayoutUtil.addContentLayout(
-			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry,
+			_cetManager, _fragmentEntryProcessorRegistry,
+			_frontendTokenDefinitionRegistry, groupId, _infoItemServiceRegistry,
 			displayPageTemplate.getPageSpecifications(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			_getRobotsMap(displayPageTemplateSettings),
@@ -1149,6 +1151,9 @@ public class DisplayPageTemplateResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

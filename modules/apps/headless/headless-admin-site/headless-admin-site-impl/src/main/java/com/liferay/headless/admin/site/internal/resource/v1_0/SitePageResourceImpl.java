@@ -11,6 +11,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.CustomMetaTag;
@@ -335,7 +336,8 @@ public class SitePageResourceImpl
 				contextUser),
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+				_fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
 				layout,
 				ServiceContextUtil.createServiceContext(
 					layout.getGroupId(), contextHttpServletRequest,
@@ -612,7 +614,8 @@ public class SitePageResourceImpl
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
 			layout = LayoutUtil.addContentLayout(
-				_cetManager, _fragmentEntryProcessorRegistry, groupId,
+				_cetManager, _fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, groupId,
 				_infoItemServiceRegistry, sitePage.getPageSpecifications(),
 				privateLayout, parentLayoutId, nameMap, titleMap,
 				descriptionMap, keywordsMap, robotsMap,
@@ -648,9 +651,10 @@ public class SitePageResourceImpl
 		else {
 			layout = LayoutUtil.addPortletLayout(
 				_cetManager, sitePage.getExternalReferenceCode(),
-				_infoItemServiceRegistry, groupId, privateLayout,
-				parentLayoutId, nameMap, titleMap, descriptionMap, keywordsMap,
-				robotsMap, typeSettingsUnicodeProperties,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
+				groupId, privateLayout, parentLayoutId, nameMap, titleMap,
+				descriptionMap, keywordsMap, robotsMap,
+				typeSettingsUnicodeProperties,
 				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
 				LocalizedMapUtil.getLocalizedMap(
 					sitePage.getFriendlyUrlPath_i18n()),
@@ -1128,8 +1132,9 @@ public class SitePageResourceImpl
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
 			layout = LayoutUtil.updateContentLayout(
 				_cetManager, _fragmentEntryProcessorRegistry,
-				_infoItemServiceRegistry, layout, nameMap, titleMap,
-				descriptionMap, keywordsMap, robotsMap, friendlyURLMap,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
+				layout, nameMap, titleMap, descriptionMap, keywordsMap,
+				robotsMap, friendlyURLMap,
 				_getTypeSettingsUnicodeProperties(
 					layout.getGroupId(), sitePage),
 				sitePage.getPageSpecifications(), serviceContext);
@@ -1153,8 +1158,9 @@ public class SitePageResourceImpl
 		}
 		else {
 			layout = LayoutUtil.updatePortletLayout(
-				_cetManager, layout, nameMap, titleMap, descriptionMap,
-				keywordsMap, robotsMap, friendlyURLMap,
+				_cetManager, _frontendTokenDefinitionRegistry, layout, nameMap,
+				titleMap, descriptionMap, keywordsMap, robotsMap,
+				friendlyURLMap,
 				_getTypeSettingsUnicodeProperties(
 					layout.getGroupId(), sitePage),
 				serviceContext,
@@ -1357,6 +1363,9 @@ public class SitePageResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

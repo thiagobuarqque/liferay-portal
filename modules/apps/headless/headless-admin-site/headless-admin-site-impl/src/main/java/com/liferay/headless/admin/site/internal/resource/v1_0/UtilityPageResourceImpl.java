@@ -9,6 +9,7 @@ import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPage;
@@ -158,7 +159,8 @@ public class UtilityPageResourceImpl
 				contextUriInfo, contextUser),
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+				_fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(layoutUtilityPageEntry.getPlid()),
 				ServiceContextUtil.createServiceContext(
 					layoutUtilityPageEntry.getGroupId(),
@@ -282,8 +284,9 @@ public class UtilityPageResourceImpl
 
 		LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(), titleMap,
-			descriptionMap, layout.getKeywordsMap(), layout.getRobotsMap(),
+			_frontendTokenDefinitionRegistry, _infoItemServiceRegistry, layout,
+			layout.getNameMap(), titleMap, descriptionMap,
+			layout.getKeywordsMap(), layout.getRobotsMap(),
 			LocalizedMapUtil.getLocalizedMap(
 				utilityPage.getFriendlyUrlPath_i18n()),
 			layout.getTypeSettingsProperties(),
@@ -427,9 +430,10 @@ public class UtilityPageResourceImpl
 			"layout.instanceable.allowed", Boolean.TRUE);
 
 		Layout layout = LayoutUtil.addContentLayout(
-			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry, utilityPage.getPageSpecifications(),
-			false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, titleMap,
+			_cetManager, _fragmentEntryProcessorRegistry,
+			_frontendTokenDefinitionRegistry, groupId, _infoItemServiceRegistry,
+			utilityPage.getPageSpecifications(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, titleMap,
 			descriptionMap, null, null, LayoutConstants.TYPE_UTILITY, null,
 			true, true,
 			LocalizedMapUtil.getLocalizedMap(
@@ -513,6 +517,9 @@ public class UtilityPageResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

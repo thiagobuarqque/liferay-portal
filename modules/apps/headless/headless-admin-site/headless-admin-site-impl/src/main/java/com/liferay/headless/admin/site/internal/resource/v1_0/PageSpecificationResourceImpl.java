@@ -7,6 +7,7 @@ package com.liferay.headless.admin.site.internal.resource.v1_0;
 
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate;
 import com.liferay.headless.admin.site.dto.v1_0.MasterPage;
@@ -366,11 +367,11 @@ public class PageSpecificationResourceImpl
 					contextUser),
 				LayoutUtil.updateLayout(
 					_cetManager, _fragmentEntryProcessorRegistry,
-					_infoItemServiceRegistry, layout, layout.getNameMap(),
-					layout.getTitleMap(), layout.getDescriptionMap(),
-					layout.getKeywordsMap(), layout.getRobotsMap(),
-					layout.getFriendlyURLMap(), pageSpecification,
-					layout.getStatus(), serviceContext));
+					_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
+					layout, layout.getNameMap(), layout.getTitleMap(),
+					layout.getDescriptionMap(), layout.getKeywordsMap(),
+					layout.getRobotsMap(), layout.getFriendlyURLMap(),
+					pageSpecification, layout.getStatus(), serviceContext));
 		}
 
 		if (!Objects.equals(
@@ -393,11 +394,12 @@ public class PageSpecificationResourceImpl
 				contextUser),
 			LayoutUtil.updateLayout(
 				_cetManager, _fragmentEntryProcessorRegistry,
-				_infoItemServiceRegistry, layout, layout.getNameMap(),
-				layout.getTitleMap(), layout.getDescriptionMap(),
-				layout.getKeywordsMap(), layout.getRobotsMap(),
-				layout.getFriendlyURLMap(), pageSpecification,
-				WorkflowConstants.STATUS_DRAFT, serviceContext));
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
+				layout, layout.getNameMap(), layout.getTitleMap(),
+				layout.getDescriptionMap(), layout.getKeywordsMap(),
+				layout.getRobotsMap(), layout.getFriendlyURLMap(),
+				pageSpecification, WorkflowConstants.STATUS_DRAFT,
+				serviceContext));
 	}
 
 	@Override
@@ -547,6 +549,9 @@ public class PageSpecificationResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

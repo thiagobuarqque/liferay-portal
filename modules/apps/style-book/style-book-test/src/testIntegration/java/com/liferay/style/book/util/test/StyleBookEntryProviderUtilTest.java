@@ -11,6 +11,8 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.impl.VirtualLayout;
@@ -23,6 +25,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
@@ -143,7 +146,7 @@ public class StyleBookEntryProviderUtilTest {
 
 	@FeatureFlags(featureFlags = @FeatureFlag("LPD-57283"))
 	@Test
-	@TestInfo({"LPD-88081", "LPD-107030"})
+	@TestInfo({"LPD-88081", "LPD-107030", "LPD-108339"})
 	public void testGetStyleBookEntry() throws Exception {
 		FeatureFlagTestUtil.invokeFeatureFlagListeners(
 			TestPropsValues.getCompanyId(), true, "LPD-57283");
@@ -152,6 +155,15 @@ public class StyleBookEntryProviderUtilTest {
 
 		_testGetStyleBookEntry(
 			styleBookEntry, styleBookEntry.getExternalReferenceCode(), null);
+
+		StyleBookEntry emptyStyleBookEntry = _getOrAddEmptyStyleBookEntry(
+			_group.getGroupId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EMPTY, emptyStyleBookEntry.getStatus());
+
+		_testGetStyleBookEntry(
+			null, emptyStyleBookEntry.getExternalReferenceCode(), null);
 
 		Group connectedDepotGroup = _addConnectedDepotGroup();
 
@@ -228,6 +240,18 @@ public class StyleBookEntryProviderUtilTest {
 		return _styleBookEntryLocalService.addStyleBookEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(), groupId,
 			false, null, null, name, null, themeId, null);
+	}
+
+	private StyleBookEntry _getOrAddEmptyStyleBookEntry(long groupId)
+		throws Exception {
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			return _styleBookEntryLocalService.getOrAddEmptyStyleBookEntry(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				groupId, _THEME_ID_CLASSIC);
+		}
 	}
 
 	private void _testGetStyleBookEntries(

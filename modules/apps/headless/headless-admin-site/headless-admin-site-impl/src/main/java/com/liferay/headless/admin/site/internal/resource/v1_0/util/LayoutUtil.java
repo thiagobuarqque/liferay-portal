@@ -13,6 +13,8 @@ import com.liferay.expando.kernel.util.ExpandoUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinition;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.AdvancedStylingConfig;
 import com.liferay.headless.admin.site.dto.v1_0.BasicWidgetPageWidgetInstance;
 import com.liferay.headless.admin.site.dto.v1_0.ClientExtension;
@@ -53,6 +55,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CustomizedPages;
@@ -83,12 +86,14 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
+import com.liferay.portal.vulcan.scope.Scope;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+import com.liferay.style.book.service.StyleBookEntryServiceUtil;
 
 import java.io.Serializable;
 
@@ -105,12 +110,14 @@ import java.util.Objects;
 
 /**
  * @author Lourdes Fernández Besada
+ * @author Thiago Buarque
  */
 public class LayoutUtil {
 
 	public static Layout addContentLayout(
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
 			PageSpecification[] pageSpecifications, boolean privateLayout,
 			long parentLayoutId, Map<Locale, String> nameMap,
@@ -250,15 +257,17 @@ public class LayoutUtil {
 		}
 
 		updateLayout(
-			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
+			cetManager, fragmentEntryProcessorRegistry,
+			frontendTokenDefinitionRegistry, infoItemServiceRegistry,
 			draftLayout, draftLayout.getNameMap(), draftLayout.getTitleMap(),
 			draftLayout.getDescriptionMap(), draftLayout.getKeywordsMap(),
 			draftLayout.getRobotsMap(), draftLayout.getFriendlyURLMap(),
 			draftContentPageSpecification, draftLayoutStatus, serviceContext);
 
 		return updateLayout(
-			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+			cetManager, fragmentEntryProcessorRegistry,
+			frontendTokenDefinitionRegistry, infoItemServiceRegistry, layout,
+			nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			friendlyURLMap, publishedContentPageSpecification, status,
 			serviceContext);
 	}
@@ -267,6 +276,7 @@ public class LayoutUtil {
 			CETManager cetManager,
 			ContentPageSpecification contentPageSpecification,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -297,7 +307,8 @@ public class LayoutUtil {
 		}
 
 		return updateLayout(
-			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
+			cetManager, fragmentEntryProcessorRegistry,
+			frontendTokenDefinitionRegistry, infoItemServiceRegistry,
 			draftLayout, layout.getNameMap(), layout.getTitleMap(),
 			layout.getDescriptionMap(), draftLayout.getKeywordsMap(),
 			draftLayout.getRobotsMap(), draftLayout.getFriendlyURLMap(),
@@ -329,6 +340,7 @@ public class LayoutUtil {
 
 	public static Layout addPortletLayout(
 			CETManager cetManager, String externalReferenceCode,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, long groupId,
 			boolean privateLayout, long parentLayoutId,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
@@ -355,14 +367,16 @@ public class LayoutUtil {
 			friendlyURLMap, null, serviceContext);
 
 		layout = updateLayout(
-			cetManager, null, infoItemServiceRegistry, layout,
-			layout.getNameMap(), layout.getTitleMap(),
-			layout.getDescriptionMap(), layout.getKeywordsMap(),
-			layout.getRobotsMap(), layout.getFriendlyURLMap(),
-			widgetPageSpecification, layout.getStatus(), serviceContext);
+			cetManager, null, frontendTokenDefinitionRegistry,
+			infoItemServiceRegistry, layout, layout.getNameMap(),
+			layout.getTitleMap(), layout.getDescriptionMap(),
+			layout.getKeywordsMap(), layout.getRobotsMap(),
+			layout.getFriendlyURLMap(), widgetPageSpecification,
+			layout.getStatus(), serviceContext);
 
 		return updatePortletLayout(
-			cetManager, layout, layout.getNameMap(), layout.getTitleMap(),
+			cetManager, frontendTokenDefinitionRegistry, layout,
+			layout.getNameMap(), layout.getTitleMap(),
 			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			layout.getRobotsMap(), layout.getFriendlyURLMap(),
 			typeSettingsUnicodeProperties, serviceContext,
@@ -429,6 +443,7 @@ public class LayoutUtil {
 	public static Layout updateContentLayout(
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
@@ -505,14 +520,16 @@ public class LayoutUtil {
 		}
 
 		updateLayout(
-			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
+			cetManager, fragmentEntryProcessorRegistry,
+			frontendTokenDefinitionRegistry, infoItemServiceRegistry,
 			draftLayout, nameMap, titleMap, descriptionMap, keywordsMap,
 			robotsMap, draftLayout.getFriendlyURLMap(),
 			draftContentPageSpecification, draftLayoutStatus, serviceContext);
 
 		return updateLayout(
-			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+			cetManager, fragmentEntryProcessorRegistry,
+			frontendTokenDefinitionRegistry, infoItemServiceRegistry, layout,
+			nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			friendlyURLMap, publishedContentPageSpecification, status,
 			serviceContext);
 	}
@@ -520,6 +537,7 @@ public class LayoutUtil {
 	public static Layout updateLayout(
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
@@ -529,8 +547,9 @@ public class LayoutUtil {
 		throws Exception {
 
 		layout = _updateLayout(
-			cetManager, layout, nameMap, titleMap, descriptionMap, keywordsMap,
-			robotsMap, friendlyURLMap, pageSpecification, serviceContext);
+			cetManager, frontendTokenDefinitionRegistry, layout, nameMap,
+			titleMap, descriptionMap, keywordsMap, robotsMap, friendlyURLMap,
+			pageSpecification, serviceContext);
 
 		if (pageSpecification instanceof
 				ContentPageSpecification contentPageSpecification) {
@@ -577,7 +596,9 @@ public class LayoutUtil {
 	}
 
 	public static Layout updatePortletLayout(
-			CETManager cetManager, Layout layout, Map<Locale, String> nameMap,
+			CETManager cetManager,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
+			Layout layout, Map<Locale, String> nameMap,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
 			Map<Locale, String> friendlyURLMap,
@@ -587,8 +608,9 @@ public class LayoutUtil {
 		throws Exception {
 
 		layout = _updateLayout(
-			cetManager, layout, nameMap, titleMap, descriptionMap, keywordsMap,
-			robotsMap, friendlyURLMap, widgetPageSpecification, serviceContext);
+			cetManager, frontendTokenDefinitionRegistry, layout, nameMap,
+			titleMap, descriptionMap, keywordsMap, robotsMap, friendlyURLMap,
+			widgetPageSpecification, serviceContext);
 
 		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.create(
 			true
@@ -632,6 +654,62 @@ public class LayoutUtil {
 
 		return _updatePortletLayout(
 			layout, serviceContext, widgetPageSpecification);
+	}
+
+	private static void _addEmptyStyleBookEntry(
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
+			Layout layout, ServiceContext serviceContext,
+			StyleBookEntryReference styleBookEntryReference)
+		throws Exception {
+
+		String styleBookEntryERC =
+			styleBookEntryReference.getStyleBookEntryERC();
+
+		if (Validator.isNull(styleBookEntryERC)) {
+			return;
+		}
+
+		Long groupId = styleBookEntryReference.getGroupId();
+
+		if (groupId != null) {
+			StyleBookEntry styleBookEntry =
+				StyleBookEntryLocalServiceUtil.
+					fetchStyleBookEntryByExternalReferenceCode(
+						styleBookEntryERC, groupId);
+
+			if (styleBookEntry != null) {
+				return;
+			}
+
+			if (LazyReferencingThreadLocal.isEnabled()) {
+				String themeId = null;
+
+				FrontendTokenDefinition frontendTokenDefinition =
+					frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+						layout);
+
+				if (frontendTokenDefinition != null) {
+					themeId = frontendTokenDefinition.getThemeId();
+				}
+
+				if (ExportImportThreadLocal.isImportInProcess()) {
+					StyleBookEntryLocalServiceUtil.getOrAddEmptyStyleBookEntry(
+						styleBookEntryERC, serviceContext.getUserId(), groupId,
+						themeId);
+				}
+				else {
+					StyleBookEntryServiceUtil.getOrAddEmptyStyleBookEntry(
+						styleBookEntryERC, groupId, themeId);
+				}
+
+				return;
+			}
+		}
+
+		LogUtil.logOptionalReference(
+			StyleBookEntry.class.getName(), styleBookEntryERC,
+			styleBookEntryReference.getScope(),
+			serviceContext.getScopeGroupId());
 	}
 
 	private static void _addPortletLookAndFeelToConfigurationMap(
@@ -817,7 +895,7 @@ public class LayoutUtil {
 		throws Exception {
 
 		if (settings == null) {
-			return new StyleBookEntryReference(null, null);
+			return new StyleBookEntryReference(null, null, null, null);
 		}
 
 		ItemExternalReference itemExternalReference =
@@ -827,7 +905,7 @@ public class LayoutUtil {
 			Validator.isNull(
 				itemExternalReference.getExternalReferenceCode())) {
 
-			return new StyleBookEntryReference(null, null);
+			return new StyleBookEntryReference(null, null, null, null);
 		}
 
 		String styleBookEntryScopeERC =
@@ -838,27 +916,15 @@ public class LayoutUtil {
 			FeatureFlagManagerUtil.checkEnabled(companyId, "LPD-57283");
 		}
 
-		StyleBookEntry styleBookEntry = null;
-
 		Long groupId = ItemScopeUtil.getItemGroupId(
 			companyId, itemExternalReference.getScope(), scopeGroupId);
 
 		if (groupId != null) {
-			styleBookEntry =
-				StyleBookEntryLocalServiceUtil.
-					fetchStyleBookEntryByExternalReferenceCode(
-						itemExternalReference.getExternalReferenceCode(),
-						StagingUtil.getLiveGroupId(groupId));
-		}
-
-		if (styleBookEntry == null) {
-			LogUtil.logOptionalReference(
-				StyleBookEntry.class.getName(),
-				itemExternalReference.getExternalReferenceCode(),
-				itemExternalReference.getScope(), scopeGroupId);
+			groupId = StagingUtil.getLiveGroupId(groupId);
 		}
 
 		return new StyleBookEntryReference(
+			groupId, itemExternalReference.getScope(),
 			itemExternalReference.getExternalReferenceCode(),
 			styleBookEntryScopeERC);
 	}
@@ -1127,7 +1193,9 @@ public class LayoutUtil {
 	}
 
 	private static Layout _updateLayout(
-			CETManager cetManager, Layout layout, Map<Locale, String> nameMap,
+			CETManager cetManager,
+			FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
+			Layout layout, Map<Locale, String> nameMap,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
 			Map<Locale, String> friendlyURLMap,
@@ -1182,7 +1250,13 @@ public class LayoutUtil {
 		layout = LayoutLocalServiceUtil.updateIconImage(
 			layout.getPlid(), _getIconImageByteArray(settings));
 
-		return _updateLookAndFeel(layout, settings);
+		layout = _updateLookAndFeel(layout, settings);
+
+		_addEmptyStyleBookEntry(
+			frontendTokenDefinitionRegistry, layout, serviceContext,
+			styleBookEntryReference);
+
+		return layout;
 	}
 
 	private static Layout _updateLayout(
@@ -1472,10 +1546,21 @@ public class LayoutUtil {
 	private static class StyleBookEntryReference {
 
 		public StyleBookEntryReference(
-			String styleBookEntryERC, String styleBookEntryScopeERC) {
+			Long groupId, Scope scope, String styleBookEntryERC,
+			String styleBookEntryScopeERC) {
 
+			_groupId = groupId;
+			_scope = scope;
 			_styleBookEntryERC = styleBookEntryERC;
 			_styleBookEntryScopeERC = styleBookEntryScopeERC;
+		}
+
+		public Long getGroupId() {
+			return _groupId;
+		}
+
+		public Scope getScope() {
+			return _scope;
 		}
 
 		public String getStyleBookEntryERC() {
@@ -1486,6 +1571,8 @@ public class LayoutUtil {
 			return _styleBookEntryScopeERC;
 		}
 
+		private final Long _groupId;
+		private final Scope _scope;
 		private final String _styleBookEntryERC;
 		private final String _styleBookEntryScopeERC;
 

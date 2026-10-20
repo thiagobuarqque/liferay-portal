@@ -74,6 +74,7 @@ import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.resource.v1_0.SitePageResource;
 import com.liferay.headless.admin.site.client.scope.Scope;
 import com.liferay.headless.admin.site.client.serdes.v1_0.FragmentImageValueSerDes;
+import com.liferay.headless.admin.site.dto.v1_0.Settings;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.AssetTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ImageValueTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
@@ -181,6 +182,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.service.StyleBookEntryLocalService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -415,6 +418,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPostSiteSitePageWithPageElements();
 		_testPostSiteSitePageWithPageSpecifications();
 		_testPostSiteSitePageWithContentPageSpecification();
+		_testPostSiteSitePageWithMissingStyleBookEntry();
 		_testPostSiteSitePageWithWidgetPageSettings();
 		_testPostSiteSitePageWithWidgetPageSettingsWithWidgetPageTemplate();
 		_testPostSiteSitePageWithWidgetPageTypeIsDeprecated();
@@ -3640,6 +3644,110 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			sitePageExternalReferenceCode, status);
 	}
 
+	private void _testPostSiteSitePageWithMissingStyleBookEntry()
+		throws Exception {
+
+		com.liferay.headless.admin.site.dto.v1_0.SitePage sitePage =
+			new com.liferay.headless.admin.site.dto.v1_0.SitePage();
+
+		com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification
+			contentPageSpecification =
+				new com.liferay.headless.admin.site.dto.v1_0.
+					ContentPageSpecification();
+
+		com.liferay.headless.admin.site.dto.v1_0.PageExperience pageExperience =
+			new com.liferay.headless.admin.site.dto.v1_0.PageExperience();
+
+		Settings settings = new Settings();
+
+		com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference
+			itemExternalReference =
+				new com.liferay.headless.admin.site.dto.v1_0.
+					ItemExternalReference();
+
+		String styleBookEntryExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		itemExternalReference.setExternalReferenceCode(
+			styleBookEntryExternalReferenceCode);
+
+		pageExperience.setExternalReferenceCode(RandomTestUtil.randomString());
+		pageExperience.setKey(SegmentsExperienceConstants.KEY_DEFAULT);
+		pageExperience.setName_i18n(
+			Collections.singletonMap("en-US", RandomTestUtil.randomString()));
+
+		settings.setStyleBookItemExternalReference(itemExternalReference);
+
+		String contentPageSpecificationExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		contentPageSpecification.setExternalReferenceCode(
+			contentPageSpecificationExternalReferenceCode);
+
+		contentPageSpecification.setPageExperiences(
+			new com.liferay.headless.admin.site.dto.v1_0.PageExperience[] {
+				pageExperience
+			});
+		contentPageSpecification.setSettings(settings);
+		contentPageSpecification.setStatus(
+			com.liferay.headless.admin.site.dto.v1_0.PageSpecification.Status.
+				APPROVED);
+		contentPageSpecification.setType(
+			com.liferay.headless.admin.site.dto.v1_0.PageSpecification.Type.
+				CONTENT_PAGE_SPECIFICATION);
+
+		String sitePageExternalReferenceCode = RandomTestUtil.randomString();
+
+		sitePage.setExternalReferenceCode(sitePageExternalReferenceCode);
+
+		sitePage.setName_i18n(
+			Collections.singletonMap("en-US", RandomTestUtil.randomString()));
+		sitePage.setPageSpecifications(
+			new com.liferay.headless.admin.site.dto.v1_0.PageSpecification[] {
+				contentPageSpecification
+			});
+		sitePage.setType(
+			com.liferay.headless.admin.site.dto.v1_0.SitePage.Type.
+				CONTENT_PAGE);
+
+		com.liferay.headless.admin.site.resource.v1_0.SitePageResource
+			sitePageResource = _sitePageResourceFactory.create(
+			).user(
+				TestPropsValues.getUser()
+			).build();
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false, sitePage);
+		}
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.
+				fetchStyleBookEntryByExternalReferenceCode(
+					styleBookEntryExternalReferenceCode,
+					testGroup.getGroupId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EMPTY, styleBookEntry.getStatus());
+
+		Layout layout = _layoutLocalService.getLayoutByExternalReferenceCode(
+			sitePageExternalReferenceCode, testGroup.getGroupId());
+
+		Assert.assertEquals(
+			styleBookEntryExternalReferenceCode, layout.getStyleBookEntryERC());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Assert.assertEquals(
+			contentPageSpecificationExternalReferenceCode,
+			draftLayout.getExternalReferenceCode());
+		Assert.assertEquals(
+			styleBookEntryExternalReferenceCode,
+			draftLayout.getStyleBookEntryERC());
+	}
+
 	private void _testPostSiteSitePageWithPageElements() throws Exception {
 		PageElement[] pageElements = PageElementsTestUtil.getPageElements(
 			testGroup.getGroupId());
@@ -5703,6 +5811,14 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	@Inject
+	private
+		com.liferay.headless.admin.site.resource.v1_0.SitePageResource.Factory
+			_sitePageResourceFactory;
+
+	@Inject
+	private StyleBookEntryLocalService _styleBookEntryLocalService;
 
 	@Inject
 	private UserLocalService _userLocalService;

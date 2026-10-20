@@ -9,6 +9,7 @@ import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.MasterPage;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
@@ -200,7 +201,8 @@ public class MasterPageResourceImpl
 				contextUriInfo, contextUser),
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+				_fragmentEntryProcessorRegistry,
+				_frontendTokenDefinitionRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
 				ServiceContextUtil.createServiceContext(
@@ -325,10 +327,11 @@ public class MasterPageResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(), layout.getRobotsMap(),
-			layout.getFriendlyURLMap(), layout.getTypeSettingsProperties(),
+			_frontendTokenDefinitionRegistry, _infoItemServiceRegistry, layout,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
+			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			layout.getTypeSettingsProperties(),
 			masterPage.getPageSpecifications(), serviceContext);
 
 		if (!layoutPageTemplateEntry.isApproved() && layout.isPublished()) {
@@ -463,8 +466,9 @@ public class MasterPageResourceImpl
 			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 		Layout layout = LayoutUtil.addContentLayout(
-			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry, masterPage.getPageSpecifications(), true,
+			_cetManager, _fragmentEntryProcessorRegistry,
+			_frontendTokenDefinitionRegistry, groupId, _infoItemServiceRegistry,
+			masterPage.getPageSpecifications(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			null, LayoutConstants.TYPE_CONTENT, null, true, true,
 			Collections.emptyMap(), WorkflowConstants.STATUS_APPROVED,
@@ -508,6 +512,9 @@ public class MasterPageResourceImpl
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
