@@ -134,8 +134,11 @@ public class StyleBookEntryZipProcessorImpl
 				styleBookEntry =
 					_styleBookEntryEntryService.updateStyleBookEntry(
 						styleBookEntry.getStyleBookEntryId(),
+						styleBookEntry.isDefaultStyleBookEntry(),
 						frontendTokenDefinition, frontendTokensValues, name,
-						new ServiceContext());
+						styleBookEntry.getStyleBookEntryKey(),
+						styleBookEntry.getPreviewFileEntryId(),
+						styleBookEntry.getThemeId(), new ServiceContext());
 			}
 
 			_importResultEntries.add(
