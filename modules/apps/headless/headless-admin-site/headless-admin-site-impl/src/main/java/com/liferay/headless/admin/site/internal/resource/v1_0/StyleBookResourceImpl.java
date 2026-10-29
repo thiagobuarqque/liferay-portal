@@ -9,6 +9,9 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.exportimport.constants.ExportImportConstants;
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.StyleBookEntityModel;
 import com.liferay.headless.admin.site.internal.util.EnabledUtil;
@@ -19,6 +22,7 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeCon
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -47,6 +51,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.constants.StyleBookConstants;
+import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.service.StyleBookEntryService;
@@ -74,13 +79,15 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/style-book.properties",
 	property = {
 		"crud.entity.class.name=com.liferay.headless.admin.site.dto.v1_0.StyleBook",
-		"crud.item.delegate=true"
+		"crud.item.delegate=true",
+		"export.import.vulcan.batch.engine.task.item.delegate=true"
 	},
 	scope = ServiceScope.PROTOTYPE, service = StyleBookResource.class
 )
 public class StyleBookResourceImpl
 	extends BaseStyleBookResourceImpl
-	implements VulcanCRUDItemDelegate<StyleBook> {
+	implements ExportImportVulcanBatchEngineTaskItemDelegate<StyleBook>,
+			   VulcanCRUDItemDelegate<StyleBook> {
 
 	@Override
 	public void deleteDesignLibraryStyleBook(
@@ -135,6 +142,69 @@ public class StyleBookResourceImpl
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
 		return _entityModel;
+	}
+
+	@Override
+	public ExportImportDescriptor<StyleBookEntry> getExportImportDescriptor() {
+		return new ExportImportDescriptor<>() {
+
+			@Override
+			public String getKey() {
+				return StyleBookEntry.class.getName();
+			}
+
+			@Override
+			public String getLabelLanguageKey() {
+				return "style-books";
+			}
+
+			@Override
+			public Class<StyleBookEntry> getModelClass() {
+				return StyleBookEntry.class;
+			}
+
+			@Override
+			public String getPortletId() {
+				return StyleBookPortletKeys.STYLE_BOOK;
+			}
+
+			@Override
+			public Scope getScope() {
+				return Scope.SITE;
+			}
+
+			@Override
+			public String getSectionKey() {
+				return ExportImportConstants.SECTION_KEY_DESIGN;
+			}
+
+			@Override
+			public boolean isActive(PortletDataContext portletDataContext) {
+				return FeatureFlagManagerUtil.isEnabled(
+					portletDataContext.getCompanyId(), "LPD-57283");
+			}
+
+			@Override
+			public boolean isScopeSupported(long companyId, long groupId) {
+				if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")) {
+					return false;
+				}
+
+				DepotEntry depotEntry =
+					_depotEntryLocalService.fetchGroupDepotEntry(groupId);
+
+				if ((depotEntry != null) &&
+					(depotEntry.getType() ==
+						DepotConstants.TYPE_DESIGN_LIBRARY)) {
+
+					return true;
+				}
+
+				return ExportImportDescriptor.super.isScopeSupported(
+					companyId, groupId);
+			}
+
+		};
 	}
 
 	@Override
