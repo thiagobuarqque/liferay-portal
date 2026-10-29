@@ -10,8 +10,10 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.constants.ExportImportConstants;
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactoryUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
+import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
@@ -142,6 +144,43 @@ public class StyleBookPortletDataHandlerTest {
 		Assert.assertFalse(portletDataHandler.isStaged());
 	}
 
+	@FeatureFlag("LPD-57283")
+	@Test
+	public void testPublishLayouts() throws Exception {
+		_group = GroupTestUtil.addGroup();
+
+		StyleBookEntry liveStyleBookEntry = _addStyleBookEntry(
+			_group.getGroupId());
+
+		GroupTestUtil.enableLocalStaging(_group);
+
+		Group stagingGroup = _group.getStagingGroup();
+
+		StyleBookEntry stagingStyleBookEntry = _addStyleBookEntry(
+			stagingGroup.getGroupId());
+
+		StagingUtil.publishLayouts(
+			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			_group.getGroupId(), false,
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildFullPublishParameterMap());
+
+		Assert.assertNull(
+			_styleBookEntryLocalService.
+				fetchStyleBookEntryByExternalReferenceCode(
+					stagingStyleBookEntry.getExternalReferenceCode(),
+					_group.getGroupId()));
+
+		StyleBookEntry publishedStyleBookEntry =
+			_styleBookEntryLocalService.
+				fetchStyleBookEntryByExternalReferenceCode(
+					liveStyleBookEntry.getExternalReferenceCode(),
+					_group.getGroupId());
+
+		Assert.assertEquals(
+			liveStyleBookEntry.getName(), publishedStyleBookEntry.getName());
+	}
+
 	@Rule
 	public final PermissionCheckerMethodTestRule
 		permissionCheckerMethodTestRule =
@@ -156,6 +195,16 @@ public class StyleBookPortletDataHandlerTest {
 		_depotEntries.add(depotEntry);
 
 		return depotEntry;
+	}
+
+	private StyleBookEntry _addStyleBookEntry(long groupId) throws Exception {
+		return _styleBookEntryLocalService.addStyleBookEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(), groupId,
+			false, StringPool.BLANK, StringPool.BLANK,
+			RandomTestUtil.randomString(), StringPool.BLANK,
+			"classic_WAR_classictheme",
+			ServiceContextTestUtil.getServiceContext(
+				groupId, TestPropsValues.getUserId()));
 	}
 
 	private boolean _hasStyleBookPortlet(long groupId) throws Exception {
