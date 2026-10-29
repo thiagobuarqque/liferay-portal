@@ -10,6 +10,7 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.exportimport.constants.ExportImportConstants;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
@@ -21,6 +22,7 @@ import com.liferay.headless.common.spi.util.GroupUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -40,6 +42,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
@@ -66,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -354,14 +358,21 @@ public class StyleBookResourceImpl
 
 		long groupId = _getStagingAwareGroupId(siteExternalReferenceCode);
 
+		String name = _getImportName(groupId, styleBook.getName(), null);
+
+		String styleBookEntryKey = styleBook.getKey();
+
+		if (!Objects.equals(name, styleBook.getName())) {
+			styleBookEntryKey = StringPool.BLANK;
+		}
+
 		StyleBookEntry styleBookEntry =
 			_styleBookEntryService.addStyleBookEntry(
 				styleBook.getExternalReferenceCode(), groupId,
 				GetterUtil.getBoolean(styleBook.getDefaultStyleBook()),
 				styleBook.getFrontendTokenDefinition(),
-				styleBook.getFrontendTokensValues(), styleBook.getName(),
-				styleBook.getKey(), styleBook.getThemeId(),
-				_getServiceContext(groupId));
+				styleBook.getFrontendTokensValues(), name, styleBookEntryKey,
+				styleBook.getThemeId(), _getServiceContext(groupId));
 
 		long previewFileEntryId = _getPreviewFileEntryId(
 			groupId, styleBook.getPreviewFileEntryExternalReferenceCode());
@@ -428,13 +439,25 @@ public class StyleBookResourceImpl
 			return postSiteStyleBook(siteExternalReferenceCode, styleBook);
 		}
 
+		String name = _getImportName(
+			groupId, styleBook.getName(), styleBookEntry);
+
+		String styleBookEntryKey = styleBook.getKey();
+
+		if (!Objects.equals(name, styleBook.getName())) {
+			styleBookEntryKey = StringPool.BLANK;
+
+			if (Objects.equals(name, styleBookEntry.getName())) {
+				styleBookEntryKey = styleBookEntry.getStyleBookEntryKey();
+			}
+		}
+
 		return _toStyleBook(
 			_styleBookEntryService.updateStyleBookEntry(
 				styleBookEntry.getStyleBookEntryId(),
 				GetterUtil.getBoolean(styleBook.getDefaultStyleBook()),
 				styleBook.getFrontendTokenDefinition(),
-				styleBook.getFrontendTokensValues(), styleBook.getName(),
-				styleBook.getKey(),
+				styleBook.getFrontendTokensValues(), name, styleBookEntryKey,
 				_getPreviewFileEntryId(
 					groupId,
 					styleBook.getPreviewFileEntryExternalReferenceCode()),
@@ -509,6 +532,29 @@ public class StyleBookResourceImpl
 		}
 
 		return group.getGroupId();
+	}
+
+	private String _getImportName(
+		long groupId, String name, StyleBookEntry styleBookEntry) {
+
+		if (!ExportImportThreadLocal.isImportInProcess() ||
+			((styleBookEntry != null) &&
+			 Objects.equals(name, styleBookEntry.getName()))) {
+
+			return name;
+		}
+
+		String uniqueName =
+			_styleBookEntryLocalService.generateStyleBookEntryName(
+				groupId, name);
+
+		if (Objects.equals(name, uniqueName) || (styleBookEntry == null) ||
+			(styleBookEntry.getStatus() == WorkflowConstants.STATUS_EMPTY)) {
+
+			return uniqueName;
+		}
+
+		return styleBookEntry.getName();
 	}
 
 	private Layout _getLayout(String externalReferenceCode, long groupId)

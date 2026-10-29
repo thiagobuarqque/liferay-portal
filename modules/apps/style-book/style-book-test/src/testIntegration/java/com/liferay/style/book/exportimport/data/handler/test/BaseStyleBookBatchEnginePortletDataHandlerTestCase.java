@@ -6,18 +6,29 @@
 package com.liferay.style.book.exportimport.data.handler.test;
 
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
+import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
+import com.liferay.exportimport.report.model.ExportImportReportEntry;
+import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
+import com.liferay.exportimport.test.util.LazyReferencingTestUtil;
 import com.liferay.exportimport.test.util.exportimport.data.handler.BaseSiteBatchEnginePortletDataHandlerTestCase;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.style.book.constants.StyleBookConstants;
 import com.liferay.style.book.model.StyleBookEntry;
@@ -25,6 +36,7 @@ import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.test.util.FrontendTokenDefinitionTestUtil;
 
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +46,154 @@ import org.junit.Test;
  */
 public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 	extends BaseSiteBatchEnginePortletDataHandlerTestCase {
+
+	@Test
+	public void testExportImportCompletesEmptyStyleBookEntryWithDuplicateName()
+		throws Exception {
+
+		String externalReferenceCode = RandomTestUtil.randomString();
+		Group targetGroup = getTargetGroup();
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingTestUtil.setLazyReferencingWithSafeCloseable(
+					true)) {
+
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			try {
+				_styleBookEntryLocalService.getOrAddEmptyStyleBookEntry(
+					externalReferenceCode, TestPropsValues.getUserId(),
+					targetGroup.getGroupId(), _THEME_ID_CLASSIC);
+			}
+			finally {
+				ExportImportThreadLocal.setPortletImportInProcess(false);
+			}
+		}
+
+		String name = RandomTestUtil.randomString();
+
+		_addStyleBookEntry(
+			RandomTestUtil.randomString(), targetGroup.getGroupId(), name,
+			StringPool.BLANK, _THEME_ID_CLASSIC);
+
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode, group.getGroupId(), name, StringPool.BLANK,
+			_THEME_ID_CLASSIC);
+
+		_exportImport();
+
+		StyleBookEntry importedStyleBookEntry = _getStyleBookEntry(
+			externalReferenceCode, targetGroup.getGroupId());
+
+		Assert.assertNotEquals(name, importedStyleBookEntry.getName());
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED,
+			importedStyleBookEntry.getStatus());
+	}
+
+	@Test
+	public void testExportImportReportsDuplicateStyleBookEntryKey()
+		throws Exception {
+
+		String styleBookEntryKey = RandomTestUtil.randomString();
+		Group targetGroup = getTargetGroup();
+
+		_addStyleBookEntry(
+			RandomTestUtil.randomString(), targetGroup.getGroupId(),
+			RandomTestUtil.randomString(), styleBookEntryKey,
+			_THEME_ID_CLASSIC);
+
+		String externalReferenceCode1 = RandomTestUtil.randomString();
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode1, group.getGroupId(),
+			RandomTestUtil.randomString(), styleBookEntryKey,
+			_THEME_ID_CLASSIC);
+
+		String externalReferenceCode2 = RandomTestUtil.randomString();
+
+		_addStyleBookEntry(
+			externalReferenceCode2, group.getGroupId(),
+			RandomTestUtil.randomString(), StringPool.BLANK, _THEME_ID_CLASSIC);
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.batch.engine.internal." +
+					"BatchEngineImportTaskExecutorImpl",
+				LoggerTestUtil.ERROR)) {
+
+			_exportImport();
+		}
+
+		Assert.assertFalse(
+			hasEntry(externalReferenceCode1, targetGroup.getGroupId()));
+		Assert.assertTrue(
+			hasEntry(externalReferenceCode2, targetGroup.getGroupId()));
+
+		List<ExportImportReportEntry> exportImportReportEntries =
+			_getExportImportReportEntries(
+				targetGroup.getGroupId(),
+				ExportImportReportEntryConstants.TYPE_ERROR);
+
+		Assert.assertEquals(
+			exportImportReportEntries.toString(), 1,
+			exportImportReportEntries.size());
+
+		ExportImportReportEntry exportImportReportEntry =
+			exportImportReportEntries.get(0);
+
+		Assert.assertEquals(
+			externalReferenceCode1,
+			exportImportReportEntry.getClassExternalReferenceCode());
+	}
+
+	@Test
+	public void testExportImportResolvesNameConflictWithUniqueName()
+		throws Exception {
+
+		String name = RandomTestUtil.randomString();
+		Group targetGroup = getTargetGroup();
+
+		StyleBookEntry targetStyleBookEntry = _addStyleBookEntry(
+			RandomTestUtil.randomString(), targetGroup.getGroupId(), name,
+			StringPool.BLANK, _THEME_ID_CLASSIC);
+
+		String externalReferenceCode = RandomTestUtil.randomString();
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode, group.getGroupId(), name, StringPool.BLANK,
+			_THEME_ID_CLASSIC);
+
+		_exportImport();
+
+		StyleBookEntry importedStyleBookEntry = _getStyleBookEntry(
+			externalReferenceCode, targetGroup.getGroupId());
+
+		Assert.assertNotEquals(name, importedStyleBookEntry.getName());
+		Assert.assertNotEquals(
+			targetStyleBookEntry.getStyleBookEntryKey(),
+			importedStyleBookEntry.getStyleBookEntryKey());
+
+		_exportImport();
+
+		StyleBookEntry reimportedStyleBookEntry = _getStyleBookEntry(
+			externalReferenceCode, targetGroup.getGroupId());
+
+		Assert.assertEquals(
+			importedStyleBookEntry.getName(),
+			reimportedStyleBookEntry.getName());
+		Assert.assertEquals(
+			importedStyleBookEntry.getStyleBookEntryKey(),
+			reimportedStyleBookEntry.getStyleBookEntryKey());
+
+		Assert.assertEquals(
+			2,
+			_styleBookEntryLocalService.getStyleBookEntriesCount(
+				targetGroup.getGroupId()));
+	}
 
 	@Test
 	public void testExportImportStyleBookFields() throws Exception {
@@ -258,6 +418,17 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 			null);
 	}
 
+	private List<ExportImportReportEntry> _getExportImportReportEntries(
+		long groupId, int type) {
+
+		return ListUtil.filter(
+			_exportImportReportEntryLocalService.getExportImportReportEntries(
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			exportImportReportEntry ->
+				(exportImportReportEntry.getGroupId() == groupId) &&
+				(exportImportReportEntry.getType() == type));
+	}
+
 	private StyleBookEntry _getStyleBookEntry(
 			String externalReferenceCode, long groupId)
 		throws Exception {
@@ -268,6 +439,10 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 	}
 
 	private static final String _THEME_ID_CLASSIC = "classic_WAR_classictheme";
+
+	@Inject
+	private ExportImportReportEntryLocalService
+		_exportImportReportEntryLocalService;
 
 	@Inject
 	private StyleBookEntryLocalService _styleBookEntryLocalService;
