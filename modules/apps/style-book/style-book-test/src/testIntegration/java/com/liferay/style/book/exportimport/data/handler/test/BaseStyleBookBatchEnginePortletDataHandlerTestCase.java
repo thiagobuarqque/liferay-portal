@@ -41,6 +41,7 @@ import com.liferay.style.book.test.util.FrontendTokenDefinitionTestUtil;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -216,6 +217,17 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 			targetStyleBookEntry.getStyleBookEntryKey(),
 			importedStyleBookEntry.getStyleBookEntryKey());
 
+		ExportImportReportEntry exportImportReportEntry =
+			_getWarningExportImportReportEntry(
+				externalReferenceCode, targetGroup.getGroupId());
+
+		String errorMessage = exportImportReportEntry.getErrorMessage();
+
+		Assert.assertTrue(
+			errorMessage,
+			errorMessage.contains(
+				"was renamed to \"" + importedStyleBookEntry.getName()));
+
 		_exportImport();
 
 		StyleBookEntry reimportedStyleBookEntry = _getStyleBookEntry(
@@ -281,6 +293,99 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 		Assert.assertEquals(
 			_THEME_ID_CLASSIC, importedStyleBookEntry.getThemeId());
 		Assert.assertTrue(importedStyleBookEntry.isDefaultStyleBookEntry());
+
+		Assert.assertNull(
+			_getWarningExportImportReportEntry(
+				styleBookEntry.getExternalReferenceCode(),
+				targetGroup.getGroupId()));
+	}
+
+	@Test
+	public void testExportImportWarnsWhenRenamedAndThemeIsNotDeployed()
+		throws Exception {
+
+		String name = RandomTestUtil.randomString();
+		Group targetGroup = getTargetGroup();
+
+		_addStyleBookEntry(
+			RandomTestUtil.randomString(), targetGroup.getGroupId(), name,
+			StringPool.BLANK, _THEME_ID_CLASSIC);
+
+		String externalReferenceCode = RandomTestUtil.randomString();
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode, group.getGroupId(), name, StringPool.BLANK,
+			RandomTestUtil.randomString());
+
+		_exportImport();
+
+		ExportImportReportEntry exportImportReportEntry =
+			_getWarningExportImportReportEntry(
+				externalReferenceCode, targetGroup.getGroupId());
+
+		String errorMessage = exportImportReportEntry.getErrorMessage();
+
+		Assert.assertTrue(errorMessage, errorMessage.contains("was renamed"));
+		Assert.assertTrue(
+			errorMessage, errorMessage.contains("is not deployed"));
+	}
+
+	@Test
+	public void testExportImportWarnsWhenThemeIsNotDeployed() throws Exception {
+		String externalReferenceCode = RandomTestUtil.randomString();
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode, group.getGroupId(),
+			RandomTestUtil.randomString(), StringPool.BLANK,
+			RandomTestUtil.randomString());
+
+		_exportImport();
+
+		Group targetGroup = getTargetGroup();
+
+		ExportImportReportEntry exportImportReportEntry =
+			_getWarningExportImportReportEntry(
+				externalReferenceCode, targetGroup.getGroupId());
+
+		String errorMessage = exportImportReportEntry.getErrorMessage();
+
+		Assert.assertTrue(
+			errorMessage, errorMessage.contains("is not deployed"));
+	}
+
+	@Test
+	public void testExportImportWarnsWhenTokenIsMissing() throws Exception {
+		Group group = getGroup();
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				group.getGroupId(), false,
+				FrontendTokenDefinitionTestUtil.getFrontendTokenDefinition(
+					RandomTestUtil.randomString()),
+				JSONUtil.put(
+					RandomTestUtil.randomString(),
+					JSONUtil.put("value", RandomTestUtil.randomString())
+				).toString(),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				"admin_WAR_admintheme",
+				ServiceContextTestUtil.getServiceContext(
+					group.getGroupId(), TestPropsValues.getUserId()));
+
+		_exportImport();
+
+		Group targetGroup = getTargetGroup();
+
+		ExportImportReportEntry exportImportReportEntry =
+			_getWarningExportImportReportEntry(
+				styleBookEntry.getExternalReferenceCode(),
+				targetGroup.getGroupId());
+
+		String errorMessage = exportImportReportEntry.getErrorMessage();
+
+		Assert.assertTrue(errorMessage, errorMessage.contains("do not exist"));
 	}
 
 	@Override
@@ -493,6 +598,24 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 		return _styleBookEntryLocalService.
 			getStyleBookEntryByExternalReferenceCode(
 				externalReferenceCode, groupId);
+	}
+
+	private ExportImportReportEntry _getWarningExportImportReportEntry(
+		String externalReferenceCode, long groupId) {
+
+		for (ExportImportReportEntry exportImportReportEntry :
+				_getExportImportReportEntries(
+					groupId, ExportImportReportEntryConstants.TYPE_WARNING)) {
+
+			if (Objects.equals(
+					externalReferenceCode,
+					exportImportReportEntry.getClassExternalReferenceCode())) {
+
+				return exportImportReportEntry;
+			}
+		}
+
+		return null;
 	}
 
 	private static final String _THEME_ID_CLASSIC = "classic_WAR_classictheme";

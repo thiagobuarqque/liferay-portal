@@ -12,6 +12,8 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
+import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.site.dto.v1_0.StyleBook;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.StyleBookEntityModel;
@@ -25,8 +27,12 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -36,10 +42,13 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -383,6 +392,8 @@ public class StyleBookResourceImpl
 				_getServiceContext(groupId));
 		}
 
+		_addWarningExportImportReportEntry(styleBook.getName(), styleBookEntry);
+
 		return _toStyleBook(styleBookEntry);
 	}
 
@@ -461,14 +472,79 @@ public class StyleBookResourceImpl
 			previewFileEntryId = styleBookEntry.getPreviewFileEntryId();
 		}
 
-		return _toStyleBook(
-			_styleBookEntryService.updateStyleBookEntry(
-				styleBookEntry.getStyleBookEntryId(),
-				GetterUtil.getBoolean(styleBook.getDefaultStyleBook()),
-				styleBook.getFrontendTokenDefinition(),
-				styleBook.getFrontendTokensValues(), name, styleBookEntryKey,
-				previewFileEntryId, styleBook.getThemeId(),
-				_getServiceContext(groupId)));
+		styleBookEntry = _styleBookEntryService.updateStyleBookEntry(
+			styleBookEntry.getStyleBookEntryId(),
+			GetterUtil.getBoolean(styleBook.getDefaultStyleBook()),
+			styleBook.getFrontendTokenDefinition(),
+			styleBook.getFrontendTokensValues(), name, styleBookEntryKey,
+			previewFileEntryId, styleBook.getThemeId(),
+			_getServiceContext(groupId));
+
+		_addWarningExportImportReportEntry(styleBook.getName(), styleBookEntry);
+
+		return _toStyleBook(styleBookEntry);
+	}
+
+	private void _addWarningExportImportReportEntry(
+			String name, StyleBookEntry styleBookEntry)
+		throws Exception {
+
+		if (!ExportImportThreadLocal.isImportInProcess()) {
+			return;
+		}
+
+		List<String> warningMessages = new ArrayList<>();
+
+		if (!Objects.equals(name, styleBookEntry.getName())) {
+			warningMessages.add(
+				_language.format(
+					LocaleUtil.US,
+					"a-style-book-named-x-already-existed-the-imported-style-" +
+						"book-was-renamed-to-x",
+					new String[] {name, styleBookEntry.getName()}));
+		}
+
+		Theme theme = _themeLocalService.fetchTheme(
+			contextCompany.getCompanyId(), styleBookEntry.getThemeId());
+
+		if (theme == null) {
+			String themeWarningMessage = _language.format(
+				LocaleUtil.US,
+				"the-theme-referenced-by-x-is-not-deployed-in-this-" +
+					"environment-and-its-tokens-could-not-be-verified-the-" +
+						"default-theme-will-be-used-until-it-is-available",
+				styleBookEntry.getName());
+
+			warningMessages.add(themeWarningMessage);
+		}
+		else if (_hasMissingTokens(
+					StyleBookUtil.getFrontendTokensValuesKeys(
+						LocaleUtil.US, styleBookEntry),
+					styleBookEntry.getFrontendTokensValues())) {
+
+			warningMessages.add(
+				_language.format(
+					LocaleUtil.US,
+					"the-style-book-x-references-tokens-that-do-not-exist-in-" +
+						"the-current-theme-affected-styles-will-use-default-" +
+							"values",
+					styleBookEntry.getName()));
+		}
+
+		if (warningMessages.isEmpty()) {
+			return;
+		}
+
+		_exportImportReportEntryLocalService.getOrAddExportImportReportEntry(
+			styleBookEntry.getGroupId(), contextCompany.getCompanyId(),
+			styleBookEntry.getExternalReferenceCode(),
+			_portal.getClassNameId(StyleBookEntry.class),
+			styleBookEntry.getStyleBookEntryId(),
+			GetterUtil.getLong(
+				ExportImportThreadLocal.getExportImportConfigurationId()),
+			ExportImportReportEntryConstants.TYPE_WARNING,
+			StringUtil.merge(warningMessages, StringPool.SPACE), null,
+			StyleBookEntry.class.getName());
 	}
 
 	private Map<String, Map<String, String>> _getActions(
@@ -687,6 +763,28 @@ public class StyleBookResourceImpl
 			});
 	}
 
+	private boolean _hasMissingTokens(
+			List<String> frontendTokenNames, String frontendTokensValues)
+		throws Exception {
+
+		if (frontendTokenNames.isEmpty() ||
+			Validator.isBlank(frontendTokensValues)) {
+
+			return false;
+		}
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(
+			frontendTokensValues);
+
+		for (String frontendTokenName : jsonObject.keySet()) {
+			if (!frontendTokenNames.contains(frontendTokenName)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private Map<String, String> _resolveActionHref(
 		Map<String, String> action, String designLibraryExternalReferenceCode,
 		String styleBookExternalReferenceCode) {
@@ -753,13 +851,26 @@ public class StyleBookResourceImpl
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
+	private ExportImportReportEntryLocalService
+		_exportImportReportEntryLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(resource.name=" + StyleBookConstants.RESOURCE_NAME + ")"
@@ -776,5 +887,8 @@ public class StyleBookResourceImpl
 
 	@Reference
 	private StyleBookEntryService _styleBookEntryService;
+
+	@Reference
+	private ThemeLocalService _themeLocalService;
 
 }
