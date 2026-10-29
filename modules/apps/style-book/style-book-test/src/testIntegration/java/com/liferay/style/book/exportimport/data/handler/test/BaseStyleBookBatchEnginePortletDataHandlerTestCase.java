@@ -21,9 +21,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -91,6 +95,41 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_APPROVED,
 			importedStyleBookEntry.getStatus());
+	}
+
+	@Test
+	public void testExportImportKeepsPreviewFileEntry() throws Exception {
+		String externalReferenceCode = RandomTestUtil.randomString();
+		Group group = getGroup();
+
+		_addStyleBookEntry(
+			externalReferenceCode, group.getGroupId(),
+			RandomTestUtil.randomString(), StringPool.BLANK, _THEME_ID_CLASSIC);
+
+		_exportImport();
+
+		Group targetGroup = getTargetGroup();
+
+		StyleBookEntry importedStyleBookEntry = _getStyleBookEntry(
+			externalReferenceCode, targetGroup.getGroupId());
+
+		FileEntry previewFileEntry = _addPreviewFileEntry(
+			importedStyleBookEntry);
+
+		_styleBookEntryLocalService.updatePreviewFileEntryId(
+			importedStyleBookEntry.getStyleBookEntryId(),
+			previewFileEntry.getFileEntryId(),
+			ServiceContextTestUtil.getServiceContext(
+				targetGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		_exportImport();
+
+		importedStyleBookEntry = _getStyleBookEntry(
+			externalReferenceCode, targetGroup.getGroupId());
+
+		Assert.assertEquals(
+			previewFileEntry.getFileEntryId(),
+			importedStyleBookEntry.getPreviewFileEntryId());
 	}
 
 	@Test
@@ -379,6 +418,24 @@ public abstract class BaseStyleBookBatchEnginePortletDataHandlerTestCase
 		draftStyleBookEntry.setModifiedDate(modifiedDate);
 
 		_styleBookEntryLocalService.publishDraft(draftStyleBookEntry);
+	}
+
+	private FileEntry _addPreviewFileEntry(StyleBookEntry styleBookEntry)
+		throws Exception {
+
+		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
+			styleBookEntry.getGroupId(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				styleBookEntry.getGroupId(), TestPropsValues.getUserId()));
+		Class<?> clazz = getClass();
+
+		return PortletFileRepositoryUtil.addPortletFileEntry(
+			null, styleBookEntry.getGroupId(), TestPropsValues.getUserId(),
+			StyleBookEntry.class.getName(),
+			styleBookEntry.getStyleBookEntryId(), RandomTestUtil.randomString(),
+			repository.getDlFolderId(),
+			clazz.getResourceAsStream("dependencies/thumbnail.png"),
+			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
 	}
 
 	private StyleBookEntry _addStyleBookEntry(

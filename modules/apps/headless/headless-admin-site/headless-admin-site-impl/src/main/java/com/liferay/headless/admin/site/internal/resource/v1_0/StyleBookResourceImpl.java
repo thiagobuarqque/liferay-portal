@@ -452,16 +452,23 @@ public class StyleBookResourceImpl
 			}
 		}
 
+		long previewFileEntryId = _getPreviewFileEntryId(
+			groupId, styleBook.getPreviewFileEntryExternalReferenceCode());
+
+		if ((previewFileEntryId == 0) &&
+			ExportImportThreadLocal.isImportInProcess()) {
+
+			previewFileEntryId = styleBookEntry.getPreviewFileEntryId();
+		}
+
 		return _toStyleBook(
 			_styleBookEntryService.updateStyleBookEntry(
 				styleBookEntry.getStyleBookEntryId(),
 				GetterUtil.getBoolean(styleBook.getDefaultStyleBook()),
 				styleBook.getFrontendTokenDefinition(),
 				styleBook.getFrontendTokensValues(), name, styleBookEntryKey,
-				_getPreviewFileEntryId(
-					groupId,
-					styleBook.getPreviewFileEntryExternalReferenceCode()),
-				styleBook.getThemeId(), _getServiceContext(groupId)));
+				previewFileEntryId, styleBook.getThemeId(),
+				_getServiceContext(groupId)));
 	}
 
 	private Map<String, Map<String, String>> _getActions(
