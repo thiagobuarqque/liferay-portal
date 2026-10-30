@@ -25,7 +25,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
@@ -199,8 +198,7 @@ public class StyleBookResourceImpl
 					(depotEntry.getType() ==
 						DepotConstants.TYPE_DESIGN_LIBRARY)) {
 
-					return FeatureFlagManagerUtil.isEnabled(
-						companyId, "LPD-57283");
+					return true;
 				}
 
 				return ExportImportDescriptor.super.isScopeSupported(

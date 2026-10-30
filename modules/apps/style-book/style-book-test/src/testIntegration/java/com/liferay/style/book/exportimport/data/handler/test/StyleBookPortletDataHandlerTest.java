@@ -119,7 +119,7 @@ public class StyleBookPortletDataHandlerTest {
 		DepotEntry designLibraryDepotEntry = _addDepotEntry(
 			DepotConstants.TYPE_DESIGN_LIBRARY);
 
-		Assert.assertFalse(
+		Assert.assertTrue(
 			_hasStyleBookPortlet(designLibraryDepotEntry.getGroupId()));
 	}
 
