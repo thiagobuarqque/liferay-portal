@@ -11,7 +11,6 @@ import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
-import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
@@ -192,17 +191,7 @@ public class StyleBookResourceImpl
 			}
 
 			@Override
-			public boolean isActive(PortletDataContext portletDataContext) {
-				return FeatureFlagManagerUtil.isEnabled(
-					portletDataContext.getCompanyId(), "LPD-57283");
-			}
-
-			@Override
 			public boolean isScopeSupported(long companyId, long groupId) {
-				if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")) {
-					return false;
-				}
-
 				DepotEntry depotEntry =
 					_depotEntryLocalService.fetchGroupDepotEntry(groupId);
 
@@ -210,7 +199,8 @@ public class StyleBookResourceImpl
 					(depotEntry.getType() ==
 						DepotConstants.TYPE_DESIGN_LIBRARY)) {
 
-					return true;
+					return FeatureFlagManagerUtil.isEnabled(
+						companyId, "LPD-57283");
 				}
 
 				return ExportImportDescriptor.super.isScopeSupported(

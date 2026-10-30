@@ -57,7 +57,6 @@ public class StyleBookPortletDataHandlerTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@FeatureFlag("LPD-57283")
 	@Test
 	public void testEnableLocalStaging() throws Exception {
 		_group = GroupTestUtil.addGroup();
@@ -115,7 +114,7 @@ public class StyleBookPortletDataHandlerTest {
 
 		_group = GroupTestUtil.addGroup();
 
-		Assert.assertFalse(_hasStyleBookPortlet(_group.getGroupId()));
+		Assert.assertTrue(_hasStyleBookPortlet(_group.getGroupId()));
 
 		DepotEntry designLibraryDepotEntry = _addDepotEntry(
 			DepotConstants.TYPE_DESIGN_LIBRARY);
@@ -124,7 +123,6 @@ public class StyleBookPortletDataHandlerTest {
 			_hasStyleBookPortlet(designLibraryDepotEntry.getGroupId()));
 	}
 
-	@FeatureFlag("LPD-57283")
 	@Test
 	public void testPortletDataHandlerRegistration() throws Exception {
 		PortletDataHandler portletDataHandler =
@@ -144,7 +142,6 @@ public class StyleBookPortletDataHandlerTest {
 		Assert.assertFalse(portletDataHandler.isStaged());
 	}
 
-	@FeatureFlag("LPD-57283")
 	@Test
 	public void testPublishLayouts() throws Exception {
 		_group = GroupTestUtil.addGroup();

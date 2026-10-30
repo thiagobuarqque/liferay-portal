@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Thiago Buarque
  */
-@FeatureFlag("LPD-57283")
+@FeatureFlag(enable = false, value = "LPD-57283")
 @RunWith(Arquillian.class)
 public class StyleBookSiteBatchEnginePortletDataHandlerTest
 	extends BaseStyleBookBatchEnginePortletDataHandlerTestCase {
