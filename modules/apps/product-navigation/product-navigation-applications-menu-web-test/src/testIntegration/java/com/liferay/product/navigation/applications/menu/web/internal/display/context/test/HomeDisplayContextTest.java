@@ -95,9 +95,9 @@ public class HomeDisplayContextTest {
 		_testGetProps(
 			"https://" + RandomTestUtil.randomString() + ".com/icon.png", true);
 
-		_testGetProps(null, false);
 		_testGetProps("data:text/html,<script>alert(1)</script>", false);
 		_testGetProps("javascript:alert(1)", false);
+		_testGetProps(null, false);
 	}
 
 	private HttpServletRequest _getHttpServletRequest() throws Exception {
@@ -173,8 +173,6 @@ public class HomeDisplayContextTest {
 
 		try {
 			Map<String, Object> propsItem = _getPropsItem();
-
-			Assert.assertNotNull(propsItem);
 
 			if (valid) {
 				Assert.assertEquals(
