@@ -30,6 +30,17 @@ import java.util.List;
  */
 public interface PanelApp extends PanelEntry {
 
+	/**
+	 * Returns the URL of the image shown for the application on the
+	 * Applications Home. A data URI is allowed.
+	 *
+	 * @return the URL of the application's image, or <code>null</code> to
+	 *         fall back to {@link #getIcon()}
+	 */
+	public default String getApplicationIconURL() {
+		return null;
+	}
+
 	public String getIcon();
 
 	/**
