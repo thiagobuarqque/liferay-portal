@@ -156,14 +156,15 @@ public class HomeDisplayContext {
 			return false;
 		}
 
-		Matcher dataURIMatcher = _dataURIPattern.matcher(applicationIconURL);
-		Matcher imageURLMatcher = _imageURLPattern.matcher(applicationIconURL);
+		Matcher matcher = _dataURIPattern.matcher(applicationIconURL);
 
-		if (dataURIMatcher.lookingAt() || imageURLMatcher.matches()) {
+		if (matcher.lookingAt()) {
 			return true;
 		}
 
-		return false;
+		matcher = _imageURLPattern.matcher(applicationIconURL);
+
+		return matcher.matches();
 	}
 
 	private static final Pattern _dataURIPattern = Pattern.compile(
