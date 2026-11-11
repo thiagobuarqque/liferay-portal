@@ -31,11 +31,11 @@ import java.util.List;
 public interface PanelApp extends PanelEntry {
 
 	/**
-	 * Returns the URL of the image shown for the application on the
-	 * Applications Home. A data URI is allowed.
+	 * Returns the URL of the panel app's icon image. The URL may be a data
+	 * URI.
 	 *
-	 * @return the URL of the application's image, or <code>null</code> to
-	 *         fall back to {@link #getIcon()}
+	 * @return the URL of the panel app's icon image, or <code>null</code> to
+	 *         use {@link #getIcon()} instead
 	 */
 	public default String getApplicationIconURL() {
 		return null;
