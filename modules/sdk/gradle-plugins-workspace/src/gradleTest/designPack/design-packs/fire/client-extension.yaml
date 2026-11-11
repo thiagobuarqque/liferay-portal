@@ -1,5 +1,6 @@
 fire:
     clayURL: css/clay.css
+    hashifyRequired: false
     mainURL: css/main.css
     name: fire
     type: themeCSS
