@@ -30,6 +30,8 @@ import java.util.List;
  */
 public interface PanelApp extends PanelEntry {
 
+	public String getIcon();
+
 	/**
 	 * Returns the URL of the panel app's icon image. The URL may be a data
 	 * URI.
@@ -37,11 +39,9 @@ public interface PanelApp extends PanelEntry {
 	 * @return the URL of the panel app's icon image, or <code>null</code> to
 	 *         use {@link #getIcon()} instead
 	 */
-	public default String getApplicationIconURL() {
+	public default String getIconURL() {
 		return null;
 	}
-
-	public String getIcon();
 
 	/**
 	 * Returns the number of notifications for the user.

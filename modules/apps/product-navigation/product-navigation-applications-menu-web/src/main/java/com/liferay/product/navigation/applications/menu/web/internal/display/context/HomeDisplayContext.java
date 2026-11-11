@@ -123,22 +123,21 @@ public class HomeDisplayContext {
 
 			propsItems.add(
 				HashMapBuilder.<String, Object>put(
-					"applicationIconURL",
-					() -> {
-						String applicationIconURL =
-							panelApp.getApplicationIconURL();
-
-						if (_isValidApplicationIconURL(applicationIconURL)) {
-							return applicationIconURL;
-						}
-
-						return null;
-					}
-				).put(
 					"href",
 					panelApp.getPortletURL(
 						_httpServletRequest
 					).toString()
+				).put(
+					"iconURL",
+					() -> {
+						String iconURL = panelApp.getIconURL();
+
+						if (_isValidIconURL(iconURL)) {
+							return iconURL;
+						}
+
+						return null;
+					}
 				).put(
 					"id", panelApp.getPortletId()
 				).put(
@@ -151,18 +150,18 @@ public class HomeDisplayContext {
 		return propsItems;
 	}
 
-	private boolean _isValidApplicationIconURL(String applicationIconURL) {
-		if (applicationIconURL == null) {
+	private boolean _isValidIconURL(String iconURL) {
+		if (iconURL == null) {
 			return false;
 		}
 
-		Matcher matcher = _dataURIPattern.matcher(applicationIconURL);
+		Matcher matcher = _dataURIPattern.matcher(iconURL);
 
 		if (matcher.lookingAt()) {
 			return true;
 		}
 
-		matcher = _imageURLPattern.matcher(applicationIconURL);
+		matcher = _imageURLPattern.matcher(iconURL);
 
 		return matcher.matches();
 	}

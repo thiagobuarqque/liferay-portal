@@ -76,15 +76,15 @@ public class HomeDisplayContextTest {
 		_testGetPropsItems(null, false);
 	}
 
-	private void _testGetPropsItems(String applicationIconURL, boolean valid)
+	private void _testGetPropsItems(String iconURL, boolean valid)
 		throws Exception {
 
 		PanelApp panelApp = Mockito.mock(PanelApp.class);
 
 		Mockito.when(
-			panelApp.getApplicationIconURL()
+			panelApp.getIconURL()
 		).thenReturn(
-			applicationIconURL
+			iconURL
 		);
 
 		Mockito.when(
@@ -110,11 +110,10 @@ public class HomeDisplayContextTest {
 		Map<String, Object> propsItem = propsItems.get(0);
 
 		if (valid) {
-			Assert.assertEquals(
-				applicationIconURL, propsItem.get("applicationIconURL"));
+			Assert.assertEquals(iconURL, propsItem.get("iconURL"));
 		}
 		else {
-			Assert.assertFalse(propsItem.containsKey("applicationIconURL"));
+			Assert.assertFalse(propsItem.containsKey("iconURL"));
 		}
 	}
 
