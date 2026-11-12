@@ -1,0 +1,4 @@
+ext.expectedErrorMessage = 'Client extension theme-css-with-unhashed-url property mainURL references css/main.css, which is not a hashed file. Add "hashify" to the assemble entry that copies it and use a wildcard in mainURL (for example, css/main.*.css), or set "hashifyRequired: false".'
+ext.taskPath = ":theme-css-with-unhashed-url:createClientExtensionConfig"
+
+apply from: project.property("commonScript.shouldFailTestCase.gradle")

@@ -1,0 +1,8 @@
+theme-css-with-hashify-not-required:
+    clayRTLURL: css/clay_rtl.css
+    clayURL: css/clay.css
+    hashifyRequired: false
+    mainRTLURL: css/main_rtl.css
+    mainURL: css/main.css
+    name: Theme CSS With Hashify Not Required
+    type: themeCSS

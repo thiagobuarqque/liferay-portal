@@ -46,6 +46,13 @@ public class ThemeCSSTypeConfigurer implements ClientExtensionConfigurer {
 		Project project,
 		TaskProvider<Copy> assembleClientExtensionTaskProvider) {
 
+		apply(project, assembleClientExtensionTaskProvider, true);
+	}
+
+	public void apply(
+		Project project, TaskProvider<Copy> assembleClientExtensionTaskProvider,
+		boolean copyCSS) {
+
 		LiferayWorkspaceNodePlugin.INSTANCE.apply(project);
 
 		GradleUtil.applyPlugin(project, ThemeBuilderPlugin.class);
@@ -68,6 +75,10 @@ public class ThemeCSSTypeConfigurer implements ClientExtensionConfigurer {
 				@SuppressWarnings("serial")
 				public void execute(Copy copy) {
 					copy.dependsOn(buildCSSTask);
+
+					if (!copyCSS) {
+						return;
+					}
 
 					copy.into(
 						new Callable<String>() {

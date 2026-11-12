@@ -28,6 +28,7 @@ import com.liferay.gradle.plugins.workspace.internal.client.extension.ClientExte
 import com.liferay.gradle.plugins.workspace.internal.client.extension.NodeBuildConfigurer;
 import com.liferay.gradle.plugins.workspace.internal.client.extension.ThemeCSSTypeConfigurer;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.workspace.internal.util.HashifyUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.JsonNodeUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.StringUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.copy.HashifyAction;
@@ -184,6 +185,7 @@ public class ClientExtensionProjectConfigurator
 			validateClientExtensionTaskProvider, workspaceExtension);
 
 		AtomicBoolean hasThemeCSSClientExtension = new AtomicBoolean(false);
+		AtomicBoolean themeCSSHashifyNotRequired = new AtomicBoolean(false);
 
 		Map<String, JsonNode> profileJsonNodes =
 			_configureClientExtensionJsonNodes(
@@ -281,6 +283,12 @@ public class ClientExtensionProjectConfigurator
 						}
 						else if (clientExtension.type.equals("themeCSS")) {
 							hasThemeCSSClientExtension.set(true);
+
+							if (!HashifyUtil.isHashifyRequired(
+									clientExtension.typeSettings)) {
+
+								themeCSSHashifyNotRequired.set(true);
+							}
 						}
 
 						if (clientExtension.type.equals("siteInitializer")) {
@@ -304,7 +312,8 @@ public class ClientExtensionProjectConfigurator
 
 		if (hasThemeCSSClientExtension.get()) {
 			_themeCSSTypeConfigurer.apply(
-				project, assembleClientExtensionTaskProvider);
+				project, assembleClientExtensionTaskProvider,
+				themeCSSHashifyNotRequired.get());
 		}
 
 		_nodeBuildConfigurer.apply(

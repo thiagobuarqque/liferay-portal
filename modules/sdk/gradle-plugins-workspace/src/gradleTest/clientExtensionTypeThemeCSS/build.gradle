@@ -5,7 +5,7 @@ import groovy.json.JsonSlurper
 task runGradleTest
 
 runGradleTest {
-	dependsOn ":theme-css-with-empty-frontend-token-definition-json:createClientExtensionConfig", ":theme-css-with-frontend-token-definition-json:createClientExtensionConfig", ":theme-css-with-rtl-css-properties:createClientExtensionConfig", ":theme-css-without-frontend-token-definition-json:createClientExtensionConfig"
+	dependsOn ":theme-css-with-empty-frontend-token-definition-json:createClientExtensionConfig", ":theme-css-with-frontend-token-definition-json:createClientExtensionConfig", ":theme-css-with-hashify-not-required:createClientExtensionConfig", ":theme-css-with-rtl-css-properties:createClientExtensionConfig", ":theme-css-without-frontend-token-definition-json:createClientExtensionConfig"
 
 	doLast {
 		_testClientExtensionConfigJSON("theme-css-with-empty-frontend-token-definition-json") {
@@ -24,7 +24,7 @@ runGradleTest {
 			assert value.get("typeSettings") == ["frontendTokenDefinitionJSON={\"frontendTokenCategories\":[{\"frontendTokenSets\":[{\"frontendTokens\":[{\"defaultValue\":\"calc(3 / 4 * 100%)\",\"editorType\":\"ColorPicker\",\"label\":\"brand-color-1\",\"mappings\":[{\"type\":\"cssVariable\",\"value\":\"brand-color-1\"}],\"name\":\"brandColor1\",\"type\":\"String\"}]}]}]}"]
 		}
 
-		_testClientExtensionConfigJSON("theme-css-with-rtl-css-properties") {
+		_testClientExtensionConfigJSON("theme-css-with-hashify-not-required") {
 			value ->
 
 			assert value instanceof Map
@@ -33,13 +33,40 @@ runGradleTest {
 
 			assert typeSettings.contains("clayRTLURL=css/clay_rtl.css")
 			assert typeSettings.contains("clayURL=css/clay.css")
+			assert !typeSettings.contains("hashifyRequired")
 			assert typeSettings.contains("mainRTLURL=css/main_rtl.css")
 			assert typeSettings.contains("mainURL=css/main.css")
 
-			Project clientExtensionProject = project(":theme-css-with-rtl-css-properties")
+			Project clientExtensionProject = project(":theme-css-with-hashify-not-required")
 
 			assert FileUtil.exists(clientExtensionProject, "build/liferay-client-extension-build/static/css/clay_rtl.css")
 			assert FileUtil.exists(clientExtensionProject, "build/liferay-client-extension-build/static/css/main_rtl.css")
+		}
+
+		_testClientExtensionConfigJSON("theme-css-with-rtl-css-properties") {
+			value ->
+
+			assert value instanceof Map
+
+			Project clientExtensionProject = project(":theme-css-with-rtl-css-properties")
+
+			File cssDir = clientExtensionProject.file("build/liferay-client-extension-build/static/css")
+
+			List<String> fileNames = cssDir.list()
+
+			assert fileNames.size() == 4
+
+			String typeSettings = String.valueOf(value.get("typeSettings"))
+
+			for (String fileName in ["clay", "clay_rtl", "main", "main_rtl"]) {
+				String hashedFileName = fileNames.find {
+					it.startsWith(fileName + ".")
+				}
+
+				assert hashedFileName != null : fileName
+				assert hashedFileName.matches(fileName + "\\.[0-9a-f]+\\.css")
+				assert typeSettings.contains("css/" + hashedFileName)
+			}
 		}
 
 		_testClientExtensionConfigJSON("theme-css-without-frontend-token-definition-json") {

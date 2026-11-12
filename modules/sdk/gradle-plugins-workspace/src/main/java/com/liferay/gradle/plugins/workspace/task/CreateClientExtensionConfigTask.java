@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.liferay.gradle.plugins.workspace.configurator.ClientExtensionProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.internal.client.extension.ClientExtension;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.workspace.internal.util.HashifyUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.JsonNodeUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.StringUtil;
 import com.liferay.release.util.ResourceUtil;
@@ -164,6 +165,12 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 
 				pluginPackageProperties.put(
 					"Liferay-Client-Extension-Frontend", "static/");
+			}
+
+			String[] hashifyURLKeys = HashifyUtil.getURLKeys(type);
+
+			if (hashifyURLKeys != null) {
+				_validateHashifiedURLs(clientExtension, hashifyURLKeys);
 			}
 
 			jsonMap.putAll(clientExtension.toJSONMap(_virtualInstanceId));
@@ -594,6 +601,16 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 			fileName);
 	}
 
+	private String _getWildcardURL(String path) {
+		int index = path.lastIndexOf(".");
+
+		if ((index == -1) || (index < path.lastIndexOf("/"))) {
+			return path + ".*";
+		}
+
+		return path.substring(0, index) + ".*" + path.substring(index);
+	}
+
 	private void _inlineFrontendTokenDefinitionJSON(
 		ClientExtension clientExtension) {
 
@@ -902,6 +919,63 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 		}
 
 		return "frontend";
+	}
+
+	@SuppressWarnings("unchecked")
+	private void _validateHashifiedURLs(
+		ClientExtension clientExtension, String[] hashifyURLKeys) {
+
+		Map<String, Object> typeSettings = clientExtension.typeSettings;
+
+		boolean hashifyRequired = HashifyUtil.isHashifyRequired(typeSettings);
+
+		typeSettings.remove("hashifyRequired");
+
+		if (!hashifyRequired) {
+			return;
+		}
+
+		for (String key : hashifyURLKeys) {
+			Object value = typeSettings.get(key);
+
+			List<String> urls = new ArrayList<>();
+
+			if (value instanceof List) {
+				urls.addAll((List<String>)value);
+			}
+			else if (value instanceof String) {
+				urls.add((String)value);
+			}
+
+			for (String url : urls) {
+				if (StringUtil.isBlank(url) || StringUtil.isUrl(url)) {
+					continue;
+				}
+
+				String path = url;
+
+				int index = path.indexOf("?");
+
+				if (index != -1) {
+					path = path.substring(0, index);
+				}
+
+				String fileName = path.substring(path.lastIndexOf("/") + 1);
+
+				if (HashifyUtil.isHashedFileName(fileName)) {
+					continue;
+				}
+
+				throw new GradleException(
+					StringUtil.concat(
+						"Client extension ", clientExtension.id, " property ",
+						key, " references ", url,
+						", which is not a hashed file. Add \"hashify\" to the ",
+						"assemble entry that copies it and use a wildcard in ",
+						key, " (for example, ", _getWildcardURL(path),
+						"), or set \"hashifyRequired: false\"."));
+			}
+		}
 	}
 
 	private void _writeToOutputFile(

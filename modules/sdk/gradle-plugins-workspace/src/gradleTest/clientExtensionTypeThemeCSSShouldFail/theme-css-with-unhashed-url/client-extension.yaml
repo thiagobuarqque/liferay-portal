@@ -1,0 +1,4 @@
+theme-css-with-unhashed-url:
+    mainURL: css/main.css
+    name: Theme CSS With Unhashed URL
+    type: themeCSS
