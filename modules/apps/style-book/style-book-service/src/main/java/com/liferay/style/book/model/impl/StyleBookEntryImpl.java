@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipWriter;
+import com.liferay.style.book.internal.util.StyleBookEntryPreviewFileEntryUtil;
 
 /**
  * @author Eudaldo Alonso
@@ -97,13 +98,9 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 	}
 
 	private FileEntry _getPreviewFileEntry() {
-		if (getPreviewFileEntryId() <= 0) {
-			return null;
-		}
-
 		try {
-			return PortletFileRepositoryUtil.getPortletFileEntry(
-				getPreviewFileEntryId());
+			return StyleBookEntryPreviewFileEntryUtil.fetchPreviewFileEntry(
+				getGroupId(), getPreviewFileEntryId());
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
