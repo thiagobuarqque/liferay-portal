@@ -1,6 +1,7 @@
 dependencies {
 	testIntegrationImplementation group: "com.liferay.jakarta.portlet", name: "com.liferay.jakarta.portlet-api", version: "4.0.0"
 	testIntegrationImplementation group: "jakarta.servlet", name: "jakarta.servlet-api", version: "6.0.0"
+	testIntegrationImplementation group: "org.osgi", name: "org.osgi.service.component", version: "1.4.0"
 	testIntegrationImplementation project(":apps:feature-flag:feature-flag-test-util")
 	testIntegrationImplementation project(":test:arquillian-extension-junit-bridge")
 }
