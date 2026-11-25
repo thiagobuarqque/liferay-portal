@@ -5,14 +5,17 @@
 
 package com.liferay.feature.flag.web.internal.feature.flag;
 
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlag;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -56,6 +59,20 @@ public class FeatureFlagManagerImpl implements FeatureFlagManager {
 	public boolean isEnabled(String key) {
 		return isEnabled(CompanyThreadLocal.getCompanyId(), key);
 	}
+
+	@Activate
+	protected void activate() {
+		if (StartupHelperUtil.isDBNew()) {
+			_featureFlagsBagProvider.processDeprecationFeatureFlags(
+				CompanyConstants.SYSTEM);
+		}
+
+		_companyLocalService.forEachCompanyId(
+			_featureFlagsBagProvider::processDeprecationFeatureFlags);
+	}
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private FeatureFlagsBagProvider _featureFlagsBagProvider;

@@ -16,6 +16,8 @@ public interface FeatureFlagsBagProvider {
 
 	public boolean isSystemKey(String key);
 
+	public void processDeprecationFeatureFlags(long companyId);
+
 	public void setEnabled(long companyId, String key, boolean enabled);
 
 }
